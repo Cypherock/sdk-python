@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 import datetime
 from packages.interfaces.logger import ILogger
-from config import config
+from packages.util.utils import config
 
 # Log level priority mapping
 log_level_priority = {

@@ -64,11 +64,9 @@ def is_hex(maybe_hex: str) -> bool:
         bool: True if the string is valid hex, False otherwise
     """
     assert_condition(maybe_hex is not None, 'Data cannot be empty')
-
     hex_str = maybe_hex
     if hex_str.startswith('0x'):
         hex_str = hex_str[2:]
-
     return bool(re.match(r'^[a-fA-F0-9]*$', hex_str))
 
 
@@ -178,11 +176,10 @@ def int_to_uint_byte(num: Union[str, int], radix: int) -> str:
     assert_condition(num is not None, 'Invalid number')
     assert_condition(radix is not None, 'Invalid radix')
 
-    try:
+    if isinstance(num, str) and num.startswith('0x'):
+        num_copy = int(num, 16)
+    else:
         num_copy = int(num)
-    except ValueError:
-        raise ValueError(f'Invalid number: {num}')
-
     if radix % 8 != 0:
         raise ValueError(f'Invalid radix: {radix}')
 

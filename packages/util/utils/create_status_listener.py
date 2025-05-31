@@ -23,7 +23,6 @@ def get_numbers_from_enums(enums: Type[Enum]) -> List[int]:
 def get_names_from_enums(enums: Type[Enum]) -> List[str]:
     return [member.name for member in enums]
 
-
 def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]:
     enums: Type[Enum] = params["enums"]
     on_event: Optional[EventCallback] = params.get("onEvent")
@@ -34,7 +33,6 @@ def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]
     operation_enums: Type[Enum] = _operation_enums if _operation_enums is not None else enums
     already_sent: Dict[int, bool] = {}
 
-    # Gets the flow status list as numbers from enums
     event_list = get_numbers_from_enums(enums)
     seed_generation_event_list = get_numbers_from_enums(seed_generation_enums) if seed_generation_enums else []
     operation_event_names = get_names_from_enums(operation_enums)
@@ -56,8 +54,11 @@ def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]
                 try:
                     operation_seed_gen_value = getattr(operation_enums, operation_seed_generation_event_name).value
                 except AttributeError:
-                    # Handle case where the name might not be a valid enum member
                     pass
+
+            seed_gen_boundary = len(seed_generation_event_list) - 1
+
+            diff_event_op_seed = event_index - operation_seed_gen_value
 
             is_before_seed_generation = (
                     not operation_seed_generation_event_name or
@@ -66,35 +67,29 @@ def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]
 
             is_seed_generation = (
                     operation_seed_generation_event_name and
-                    event_index - operation_seed_gen_value >= 0 and
-                    event_index - operation_seed_gen_value <
-                    (len(seed_generation_event_list) - 1 if seed_generation_event_list else 0)
+                    0 <= diff_event_op_seed < seed_gen_boundary
             )
 
             is_after_seed_generation = (
                     operation_seed_generation_event_name and
-                    event_index - operation_seed_gen_value >=
-                    (len(seed_generation_event_list) - 1 if seed_generation_event_list else 0)
+                    diff_event_op_seed >= seed_gen_boundary
             )
 
             is_completed = is_before_seed_generation and operation_status >= event_index
 
             if is_seed_generation:
                 is_completed = (
-                        core_status >
-                        (event_index - operation_seed_gen_value)
+                        core_status > diff_event_op_seed
                 )
             elif is_after_seed_generation:
                 is_completed = (
-                        operation_status >
-                        (event_index - operation_seed_gen_value + 1)
+                        operation_status > (diff_event_op_seed + 1)
                 )
 
             if is_completed and not already_sent.get(event_index, False):
                 already_sent[event_index] = True
 
                 if logger:
-                    # Find the enum member name corresponding to the event_index
                     event_name = next((member.name for member in enums if member.value == event_index),
                                       str(event_index))
                     logger.verbose("Event", {
