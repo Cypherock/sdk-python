@@ -14,7 +14,7 @@ class TestCreateStatusListener(unittest.TestCase):
         for test_case in fixtures["valid"]:
             with self.subTest(test_case_name=test_case["name"]):
                 on_event_for_this_subtest = MagicMock()
-
+                logger = test_case.get("logger")
                 operation_enum_from_fixture = test_case.get("operationEnum")
                 seed_generation_enum_from_fixture = test_case.get("seedGenerationEnum")
 
@@ -23,6 +23,7 @@ class TestCreateStatusListener(unittest.TestCase):
                     "operationEnums": operation_enum_from_fixture,
                     "seedGenerationEnums": seed_generation_enum_from_fixture,
                     "onEvent": on_event_for_this_subtest,
+                    "logger": logger
                 })
 
                 on_status_func = status_listener_components["onStatus"]

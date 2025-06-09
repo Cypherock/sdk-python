@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional, Protocol, TypedDict, runtime_checkable
 
-class ConnectionTypeMap(Enum):
+class ConnectionTypeMap(str, Enum):
     SERIAL_PORT = 'serial'
     HID = 'hid'
     WEBUSB = 'webusb'

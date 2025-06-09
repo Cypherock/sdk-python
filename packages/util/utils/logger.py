@@ -1,9 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 import datetime
-from packages.interfaces.logger import ILogger
+from packages.interfaces.logger import ILogger, LogLevel
 from packages.util.utils import config
 
-# Log level priority mapping
 log_level_priority = {
     "error": 0,
     "warn": 1,
@@ -12,109 +11,92 @@ log_level_priority = {
     "debug": 4
 }
 
-def do_log(level: str) -> bool:
-    """
-    Determine if a log message should be output based on configured log level.
-    """
+def do_log(level: LogLevel) -> bool:
     current_priority = log_level_priority.get(level)
     allowed_priority = log_level_priority.get(config.get("LOG_LEVEL", "info"), 2)
 
     if current_priority is None:
         return False
-
     return allowed_priority >= current_priority
 
-
 def create_default_meta(service: str, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """
-    Create default metadata for log messages.
-    """
     result = {
         "service": service,
-        "timestamp": datetime.datetime.now()
+        "timestamp": datetime.datetime.now().isoformat()
     }
-
     if meta is not None:
         result.update(meta)
-
     return result
 
+class DefaultConsoleLogger:
+    def __init__(self, service: str):
+        self._service = service
 
-def create_default_console_logger(service: str) -> Dict[str, Any]:
-    def info_logger(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
-        if do_log("info"):
-            print("INFO:", message, create_default_meta(service, meta))
+    def _log(self, level: LogLevel, message: Any, meta: Optional[Dict[str, Any]] = None):
+        if do_log(level):
+            print(f"{level.upper()}: {message} {create_default_meta(self._service, meta)}")
 
-    def debug_logger(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
-        if do_log("debug"):
-            print("DEBUG:", message, create_default_meta(service, meta))
+    def info(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._log("info", message, meta)
 
-    def verbose_logger(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
-        if do_log("verbose"):
-            print("VERBOSE:", message, create_default_meta(service, meta))
+    def debug(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._log("debug", message, meta)
 
-    def warn_logger(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
-        if do_log("warn"):
-            print("WARN:", message, create_default_meta(service, meta))
+    def verbose(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._log("verbose", message, meta)
 
-    def error_logger(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
-        if do_log("error"):
-            print("ERROR:", message, create_default_meta(service, meta))
+    def warn(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._log("warn", message, meta)
 
-    return {
-        "info": info_logger,
-        "debug": debug_logger,
-        "verbose": verbose_logger,
-        "warn": warn_logger,
-        "error": error_logger
-    }
+    def error(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._log("error", message, meta)
 
+def create_default_console_logger(service: str) -> ILogger:
+    return DefaultConsoleLogger(service)
 
 def update_logger_object(params: Dict[str, Any]) -> None:
-    """
-    Update logger object with new logger methods.
-    """
-    new_logger = params.get("newLogger")
-    current_logger = params.get("currentLogger")
+    new_logger = cast(ILogger, params.get("newLogger"))
+    current_logger = cast(ILogger, params.get("currentLogger"))
 
-    if new_logger and current_logger:
-        for key in new_logger:
-            if key in new_logger:
-                def create_logger_wrapper(key_name):
-                    def wrapper(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
-                        new_message = message
-                        new_meta = meta
+    if not (new_logger and current_logger):
+        return
 
-                        # Handle JSON serialization if available
-                        if message and isinstance(message, object) and hasattr(message, 'to_json'):
-                            new_message = message.to_json()
+    for key in ("info", "error", "warn", "debug", "verbose"):
+        new_method = getattr(new_logger, key, None)
+        if callable(new_method):
+            def create_wrapper(method_to_call):
+                def wrapper(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+                    new_message = message.to_json() if hasattr(message, 'to_json') else message
+                    new_meta = meta.to_json() if hasattr(meta, 'to_json') else meta
+                    method_to_call(new_message, new_meta)
+                return wrapper
+            setattr(current_logger, key, create_wrapper(new_method))
 
-                        if meta and isinstance(meta, object) and hasattr(meta, 'to_json'):
-                            new_meta = meta.to_json()
+class PrefixedLogger:
+    def __init__(self, original_logger: ILogger, prefix: str):
+        self._logger = original_logger
+        self._prefix = prefix
 
-                        new_logger[key_name](new_message, new_meta)
+    def _call_original(self, level: LogLevel, message: Any, meta: Optional[Dict[str, Any]] = None):
+        new_meta = meta or {}
+        new_meta["component"] = self._prefix
 
-                    return wrapper
+        original_method = getattr(self._logger, level)
+        if isinstance(message, str):
+            original_method(f"{self._prefix}: {message}", new_meta)
+        else:
+            original_method(message, new_meta)
 
-                current_logger[key] = create_logger_wrapper(key)
-
+    def info(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._call_original("info", message, meta)
+    def debug(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._call_original("debug", message, meta)
+    def warn(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._call_original("warn", message, meta)
+    def error(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._call_original("error", message, meta)
+    def verbose(self, message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
+        self._call_original("verbose", message, meta)
 
 def create_logger_with_prefix(logger: ILogger, name: str) -> ILogger:
-    new_logger = {key: value for key, value in logger.items()}
-
-    for key in new_logger:
-        def create_prefixed_logger(key_name):
-            def prefixed_logger(message: Any, meta: Optional[Dict[str, Any]] = None) -> None:
-                new_meta = meta or {}
-                new_meta["component"] = name
-
-                if isinstance(message, str):
-                    logger[key_name](f"{name}: {message}", new_meta)
-                else:
-                    logger[key_name](message, new_meta)
-
-            return prefixed_logger
-
-        new_logger[key] = create_prefixed_logger(key)
-
-    return new_logger
+    return PrefixedLogger(logger, name)
