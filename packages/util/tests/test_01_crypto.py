@@ -1,12 +1,11 @@
-import unittest
+import pytest
 from packages.util.utils.crypto import (
     crc16, is_hex, hex_to_uint8array, uint8array_to_hex,
     pad_start, int_to_uint_byte, hex_to_ascii
 )
 
-class TestCrypto(unittest.TestCase):
+class TestCrypto:
     def test_is_hex(self):
-        """Test isHex function with valid and invalid parameters."""
         # Valid hex strings
         valid_cases = [
             "0x12",
@@ -18,7 +17,7 @@ class TestCrypto(unittest.TestCase):
             "0x1234567890ABCDEF"
         ]
         for test_case in valid_cases:
-            self.assertTrue(is_hex(test_case))
+            assert is_hex(test_case)
 
         # Invalid hex strings
         invalid_cases = [
@@ -28,10 +27,9 @@ class TestCrypto(unittest.TestCase):
             "xyz",
         ]
         for test_case in invalid_cases:
-            self.assertFalse(is_hex(test_case))
+            assert not is_hex(test_case)
 
     def test_hex_to_ascii(self):
-        """Test hexToAscii function with valid parameters."""
         test_cases = [
             {"ascii": "", "hex": ""},
             {"ascii": "", "hex": "0x"},
@@ -42,7 +40,7 @@ class TestCrypto(unittest.TestCase):
             },
             {
                 "ascii": "Surrounded to me occasional pianoforte alteration unaffected impossible ye. For saw half than cold. Pretty merits waited six talked pulled you. Conduct replied off led whether any shortly why arrived adapted. Numerous ladyship so raillery humoured goodness received an. So narrow formal length my highly longer afford oh. Tall neat he make or at dull ye.",
-                "hex": "0x537572726f756e64656420746f206d65206f63636173696f6e616c207069616e6f666f72746520616c7465726174696f6e20756e616666656374656420696d706f737369626c652079652e20466f72207361772068616c66207468616e20636f6c642e20507265747479206d657269747320776169746564207369782074616c6b65642070756c6c656420796f752e20436f6e64756374207265706c696564206f6666206c6564207768657468657220616e792073686f72746c7920776879206172726976656420616461707465642e204e756d65726f7573206c6164797368697020736f207261696c6c6572792068756d6f7572656420676f6f646e65737320726563656976656420616e2e20536f206e6172726f7720666f726d616c206c656e677468206d7920686967686c79206c6f6e676572206166666f7264206f682e2054616c6c206e656174206865206d616b65206f722061742064756c6c2079652e"
+                "hex": "0x537572726f756e64656420746f206d65206f63636173696f6e616c207069616e6f666f72746520616c7465726174696f6e20756e616666656374656420696d706f737369626c652079652e20466f72207361772068616c66207468616e20636f6c642e20507265747479206d657269747320776169746564207369782074616c6b65642070756c6c656420796f752e20436f6e64756374207265706c696564206f6666206c6564207768657468657220616e792073686f72746c7920776879206172726976656420616461707465642e204e756d65726f7573206c6164797368697020736f207261696c6c6572792068756d6f7572656420676f6f646e65737320726563656976656420616e2e20536f206e6172726f7720666f726d616c206c656e677468206d7920686967686c79206c6f6e676572206166666f7264206f682e2054616c6c206e656174206865206d616b65206f722061742064756c6c2079652e",
             },
             {
                 "ascii": "Impossible considered invitation him men instrument saw celebrated unpleasant. Put rest and must set kind next many near nay. He exquisite continued explained middleton am. Voice hours young woody has she think equal. Estate moment he at on wonder at season little. Six garden result summer set family esteem nay estate. End admiration mrs unreserved discovered comparison especially invitation.",
@@ -56,19 +54,17 @@ class TestCrypto(unittest.TestCase):
 
         for test_case in test_cases:
             result = hex_to_ascii(test_case["hex"])
-            self.assertIsInstance(result, str)
-            self.assertEqual(result, test_case["ascii"])
+            assert isinstance(result, str)
+            assert result == test_case["ascii"]
 
     def test_hex_to_ascii_invalid(self):
-        """Test hexToAscii function with invalid parameters."""
         test_cases = [None, "k", "as", "0x2s"]
 
         for test_case in test_cases:
-            with self.assertRaises(Exception):
+            with pytest.raises(Exception):
                 hex_to_ascii(test_case)
 
     def test_int_to_uint_byte(self):
-        """Test intToUintByte function with valid parameters."""
         test_cases = [
             {"params": {"ele": 0, "radix": 8}, "result": "00"},
             {"params": {"ele": 19, "radix": 8}, "result": "13"},
@@ -85,10 +81,9 @@ class TestCrypto(unittest.TestCase):
                 test_case["params"]["ele"],
                 test_case["params"]["radix"]
             )
-            self.assertEqual(result, test_case["result"])
+            assert result == test_case["result"]
 
     def test_int_to_uint_byte_invalid(self):
-        """Test intToUintByte function with invalid parameters."""
         test_cases = [
             {"ele": None, "radix": 7},
             {"ele": 0, "radix": None},
@@ -108,11 +103,10 @@ class TestCrypto(unittest.TestCase):
         ]
 
         for test_case in test_cases:
-            with self.assertRaises(Exception):
+            with pytest.raises(Exception):
                 int_to_uint_byte(test_case["ele"], test_case["radix"])
     
     def test_pad_start(self):
-        """Test padStart function with valid parameters."""
         test_cases = [
             {
                 "params": {"str": "", "target_length": 8, "pad_string": " "},
@@ -138,10 +132,9 @@ class TestCrypto(unittest.TestCase):
                 test_case["params"]["target_length"],
                 test_case["params"]["pad_string"]
             )
-            self.assertEqual(result, test_case["result"])
+            assert result == test_case["result"]
     
     def test_pad_start_invalid(self):
-        """Test padStart function with invalid parameters."""
         test_cases = [
             {"str": None, "target_length": 0, "pad_string": ""},
             {"str": "", "target_length": None, "pad_string": ""},
@@ -150,11 +143,10 @@ class TestCrypto(unittest.TestCase):
         ]
         
         for test_case in test_cases:
-            with self.assertRaises(Exception):
+            with pytest.raises(Exception):
                 pad_start(test_case["str"], test_case["target_length"], test_case["pad_string"])
     
     def test_uint8array_to_hex(self):
-        """Test uint8ArrayToHex function with valid parameters."""
         test_cases = [
             {
                 "uint8": bytearray([]),
@@ -176,10 +168,9 @@ class TestCrypto(unittest.TestCase):
         
         for test_case in test_cases:
             result = uint8array_to_hex(test_case["uint8"])
-            self.assertEqual(result, test_case["result"])
+            assert result == test_case["result"]
     
     def test_hex_to_uint8array(self):
-        """Test hexToUint8Array function with valid parameters."""
         test_cases = [
             {
                 "uint8": bytearray([]),
@@ -205,18 +196,16 @@ class TestCrypto(unittest.TestCase):
         
         for test_case in test_cases:
             result = hex_to_uint8array(test_case["hex"])
-            self.assertEqual(result, test_case["uint8"])
+            assert result == test_case["uint8"]
     
     def test_hex_to_uint8array_invalid(self):
-        """Test hexToUint8Array function with invalid parameters."""
         test_cases = [None, "0x21as", "asfkh"]
         
         for test_case in test_cases:
-            with self.assertRaises(Exception):
+            with pytest.raises(Exception):
                 hex_to_uint8array(test_case)
     
     def test_crc16(self):
-        """Test crc16 function with valid parameters."""
         test_cases = [
             {
                 "uint8": bytearray([]),
@@ -253,7 +242,6 @@ class TestCrypto(unittest.TestCase):
         
         for test_case in test_cases:
             result = crc16(test_case["uint8"])
-            self.assertEqual(result, test_case["result"])
+            assert result == test_case["result"]
 
-if __name__ == "__main__":
-    unittest.main()
+

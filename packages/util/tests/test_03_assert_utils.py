@@ -1,27 +1,26 @@
-import unittest
-from unittest import TestCase
+import pytest
 from packages.util.utils.assert_utils import assert_condition
 
-class TestAssert(TestCase):
+class TestAssert:
     def test_assert_fails(self):
         test_cases = [
             {
                 "name": "undefined",
                 "condition": None,
                 "error": "Invalid argument",
-                "error_message": "AssertionError: Invalid argument"
+                "error_message": "Invalid argument"
             },
             {
                 "name": "null",
                 "condition": None,
                 "error": "Invalid argument",
-                "error_message": "AssertionError: Invalid argument"
+                "error_message": "Invalid argument"
             },
             {
                 "name": "false",
                 "condition": False,
                 "error": "Invalid argument",
-                "error_message": "AssertionError: Invalid argument"
+                "error_message": "Invalid argument"
             },
             {
                 "name": "false with custom error",
@@ -32,11 +31,10 @@ class TestAssert(TestCase):
         ]
 
         for test_case in test_cases:
-            with self.subTest(test_case["name"]):
-                with self.assertRaises(Exception) as context:
-                    assert_condition(test_case["condition"], test_case["error"])
+            with pytest.raises(Exception) as context:
+                assert_condition(test_case["condition"], test_case["error"])
 
-                self.assertEqual(str(context.exception), test_case["error_message"])
+            assert str(context.value) == test_case["error_message"]
 
     def test_assert_passes(self):
         test_cases = [
@@ -71,12 +69,6 @@ class TestAssert(TestCase):
         ]
 
         for test_case in test_cases:
-            with self.subTest(test_case["name"]):
-                try:
-                    assert_condition(test_case["condition"], "Should not have failed")
-                except Exception:
-                    self.fail(f"assert_condition raised an exception unexpectedly for {test_case['name']}")
+            assert_condition(test_case["condition"], "Should not have failed")
 
 
-if __name__ == "__main__":
-    unittest.main()
