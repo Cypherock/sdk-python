@@ -13,9 +13,9 @@ class DeviceState(Enum):
 
 class IDevice(TypedDict):
     path: str
-    deviceState: DeviceState
-    vendorId: int
-    productId: int
+    device_state: DeviceState
+    vendor_id: int
+    product_id: int
     serial: str
     type: str
 
@@ -25,25 +25,25 @@ class PoolData(TypedDict):
 
 @runtime_checkable
 class IDeviceConnection(Protocol):
-    async def getConnectionType(self) -> str:
+    async def get_connection_type(self) -> str:
         ...
 
-    async def isConnected(self) -> bool:
+    async def is_connected(self) -> bool:
         ...
 
-    async def beforeOperation(self) -> None:
+    async def before_operation(self) -> None:
         ...
 
-    async def afterOperation(self) -> None:
+    async def after_operation(self) -> None:
         ...
 
-    async def getSequenceNumber(self) -> int:
+    async def get_sequence_number(self) -> int:
         ...
 
-    async def getNewSequenceNumber(self) -> int:
+    async def get_new_sequence_number(self) -> int:
         ...
 
-    async def getDeviceState(self) -> DeviceState:
+    async def get_device_state(self) -> DeviceState:
         ...
 
     async def send(self, data: bytearray) -> None:

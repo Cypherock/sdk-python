@@ -28,7 +28,7 @@ class DeviceConnection:
 
     def __init__(self, device: IDevice):
         self.port = device["path"]
-        self.device_state = device["deviceState"]
+        self.device_state = device["device_state"]
         self.serial = device.get("serial")
         self.connection_id = str(uuid.uuid4())
         self.sequence_number = 0
@@ -45,7 +45,7 @@ class DeviceConnection:
         self.initialized = True
         self.data_listener = DataListener({"connection": self.connection})
 
-    async def getConnectionType(self) -> str:
+    async def get_connection_type(self) -> str:
         return ConnectionTypeMap.SERIAL_PORT.value
 
     @classmethod
@@ -72,26 +72,26 @@ class DeviceConnection:
             raise DeviceConnectionError(DeviceConnectionErrorType.NOT_CONNECTED)
         return cls(devices[0])
 
-    async def getDeviceState(self) -> DeviceState:
+    async def get_device_state(self) -> DeviceState:
         """
         Get the device state.
         """
         return self.device_state
 
-    async def isInitialized(self) -> bool:
+    async def is_initialized(self) -> bool:
         return self.initialized
 
-    async def getNewSequenceNumber(self) -> int:
+    async def get_new_sequence_number(self) -> int:
         """
         Get a new sequence number and increment the counter.
         """
         self.sequence_number += 1
         return self.sequence_number
 
-    async def getSequenceNumber(self) -> int:
+    async def get_sequence_number(self) -> int:
         return self.sequence_number
 
-    async def isConnected(self) -> bool:
+    async def is_connected(self) -> bool:
         return self.connection.is_open
 
     async def destroy(self) -> None:
@@ -103,10 +103,10 @@ class DeviceConnection:
         if self.connection.is_open:
             self.connection.close()
 
-    async def beforeOperation(self) -> None:
+    async def before_operation(self) -> None:
         await self.open()
 
-    async def afterOperation(self) -> None:
+    async def after_operation(self) -> None:
         await self.close()
 
     async def send(self, data: bytearray) -> None:
@@ -130,18 +130,18 @@ class DeviceConnection:
     async def peek(self) -> List[PoolData]:
         return self.data_listener.peek()
 
-    async def isOpen(self) -> bool:
+    async def is_open(self) -> bool:
         """
         Check if the connection is open and ready to communicate.
         """
-        is_connected = await self.isConnected()
+        is_connected = await self.is_connected()
         return is_connected and self.connection.is_open
 
     async def open(self) -> None:
         """
         Open the connection.
         """
-        if await self.isOpen():
+        if await self.is_open():
             return
 
         await open_connection(self.connection)

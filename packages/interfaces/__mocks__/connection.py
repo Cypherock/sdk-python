@@ -35,26 +35,26 @@ class MockDeviceConnection:
     async def create(cls) -> 'MockDeviceConnection':
         return cls()
 
-    async def getConnectionType(self) -> str:
+    async def get_connection_type(self) -> str:
         return self.connection_type
 
-    async def isConnected(self) -> bool:
+    async def is_connected(self) -> bool:
         return not self.is_destroyed
 
-    async def beforeOperation(self) -> None:
+    async def before_operation(self) -> None:
         self.is_connection_open = True
 
-    async def afterOperation(self) -> None:
+    async def after_operation(self) -> None:
         self.is_connection_open = False
 
-    async def getSequenceNumber(self) -> int:
+    async def get_sequence_number(self) -> int:
         return self.sequence_number
 
-    async def getNewSequenceNumber(self) -> int:
+    async def get_new_sequence_number(self) -> int:
         self.sequence_number += 1
         return self.sequence_number
 
-    async def getDeviceState(self) -> DeviceState:
+    async def get_device_state(self) -> DeviceState:
         return self.device_state
 
     async def destroy(self) -> None:
@@ -68,7 +68,7 @@ class MockDeviceConnection:
         if self.on_data:
             self.on_data(data)
 
-    async def mockDeviceSend(self, data: bytes) -> None:
+    async def mock_device_send(self, data: bytes) -> None:
         self.pool.append({"id": str(uuid.uuid4()), "data": data})
 
     async def receive(self) -> Optional[bytes]:

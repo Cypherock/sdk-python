@@ -37,10 +37,10 @@ async def get_available_devices() -> List[IDevice]:
                     internal_device_state in supported_versions_to_device_state):
                 devices.append({
                     "path": path,
-                    "deviceState": supported_versions_to_device_state[internal_device_state],
+                    "device_state": supported_versions_to_device_state[internal_device_state],
                     "serial": serial_number,
-                    "vendorId": vendor_id,
-                    "productId": product_id,
+                    "vendor_id": vendor_id,
+                    "product_id": product_id,
                     "type": ConnectionTypeMap.SERIAL_PORT.value
                 })
 
