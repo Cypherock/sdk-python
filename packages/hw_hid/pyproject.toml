@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "hw_hid"
+version = "0.1.0"
+description = "Hardware HID Connector for Cypherock X1"
+authors = ["Temiloluwa Yusuf <ytemiloluwa@gmail.com>"]
+readme = "README.md"
+packages = [{include = "hw_hid"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+hid = "^1.0.8"
+interfaces = {path = "../interfaces", develop = true}
+util = {path = "../util", develop = true}
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api" 
