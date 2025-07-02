@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "hw-serialport"
+version = "0.1.0"
+description = "Hardware Serial Port Connector for Cypherock X1"
+authors = ["Temiloluwa Yusuf <ytemiloluwa@gmail.com>"]
+readme = "README.md"
+packages = [{include = "hw_serialport"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+pyserial = "^3.5"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
