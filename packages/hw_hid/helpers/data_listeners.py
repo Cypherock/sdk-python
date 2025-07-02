@@ -1,19 +1,21 @@
-import time
-import uuid
 import asyncio
 import threading
-from typing import Dict, Any, Optional
+import time
+import uuid
+from typing import Any, Dict, Optional
+
 from packages.interfaces import IDevice, PoolData
-from .connection import get_available_devices
+
 from ..logger import logger
+from .connection import get_available_devices
 
 
 class DataListener:
     def __init__(self, params: Dict[str, Any]):
-        self.connection = params['connection']
-        self.device: IDevice = params['device']
-        self.on_close_callback = params.get('on_close')
-        self.on_error_callback = params.get('on_error')
+        self.connection = params["connection"]
+        self.device: IDevice = params["device"]
+        self.on_close_callback = params.get("on_close")
+        self.on_error_callback = params.get("on_error")
         self.on_some_device_disconnect_binded = self.on_some_device_disconnect
         self.listening = False
         self.pool: [PoolData] = []
@@ -42,7 +44,7 @@ class DataListener:
 
     async def receive(self):
         if self.pool:
-            return self.pool.pop(0).get('data')
+            return self.pool.pop(0).get("data")
         return None
 
     def peek(self):
@@ -67,7 +69,9 @@ class DataListener:
     def add_all_listeners(self) -> None:
         if not self._monitor_thread or not self._monitor_thread.is_alive():
             logger.debug("Starting device disconnect monitor thread.")
-            self._monitor_thread = threading.Thread(target=self._run_device_monitor, daemon=True)
+            self._monitor_thread = threading.Thread(
+                target=self._run_device_monitor, daemon=True
+            )
             self._monitor_thread.start()
 
     def remove_all_listeners(self) -> None:
@@ -87,7 +91,7 @@ class DataListener:
             if data:
                 await self.on_data(data)
         except Exception as error:
-            logger.error('Error while reading data from device')
+            logger.error("Error while reading data from device")
             logger.error(error)
         finally:
             self.read_promise = None
@@ -107,10 +111,7 @@ class DataListener:
 
     async def on_data(self, data):
         if data and len(data) > 0:
-            self.pool.append({
-                'id': str(uuid.uuid4()),
-                'data': bytearray(data)
-            })
+            self.pool.append({"id": str(uuid.uuid4()), "data": bytearray(data)})
 
     async def on_close(self):
         self.stop_listening()
@@ -138,12 +139,12 @@ class DataListener:
         connected_devices = await get_available_devices()
 
         is_device_connected = any(
-            d['path'] == self.device['path'] and
-            d['serial'] == self.device['serial'] and
-            d['productId'] == self.device['productId'] and
-            d['type'] == self.device['type'] and
-            d['deviceState'] == self.device['deviceState'] and
-            d['vendorId'] == self.device['vendorId']
+            d["path"] == self.device["path"]
+            and d["serial"] == self.device["serial"]
+            and d["product_id"] == self.device["product_id"]
+            and d["type"] == self.device["type"]
+            and d["device_state"] == self.device["device_state"]
+            and d["vendor_id"] == self.device["vendor_id"]
             for d in connected_devices
         )
 

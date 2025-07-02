@@ -1,18 +1,20 @@
-from typing import List, Any, Optional
-import uuid
-import hid
 import asyncio
+import uuid
+from typing import Any, List, Optional
+
+import hid
 
 from packages.interfaces import (
-    IDeviceConnection,
-    IDevice,
     ConnectionTypeMap,
     DeviceConnectionError,
     DeviceConnectionErrorType,
-    PoolData
-
+    DeviceState,
+    IDevice,
+    IDeviceConnection,
+    PoolData,
 )
-from .helpers import get_available_devices, DataListener
+
+from .helpers import DataListener, get_available_devices
 from .logger import logger
 
 
@@ -29,18 +31,18 @@ class DeviceConnection(IDeviceConnection):
             "connection": self.connection,
             "device": self.device,
             "on_close": self.on_close,
-            "on_error": self.on_error
+            "on_error": self.on_error,
         }
         self.data_listener: DataListener = DataListener(listener_params)
 
     # pylint: disable=no-self-use
-    async def get_connection_type(self):
+    async def get_connection_type(self) -> str:
         return ConnectionTypeMap.HID
 
     @staticmethod
     async def connect(device: IDevice):
-        # noinspection PyUnresolvedReferences
-        connection = hid.device()
+        # Create HID device connection
+        connection = hid.device()  # type: ignore
         await asyncio.to_thread(connection.open_path, device["path"])
         return DeviceConnection(device, connection)
 
@@ -54,8 +56,8 @@ class DeviceConnection(IDeviceConnection):
         if not devices:
             raise DeviceConnectionError(DeviceConnectionErrorType.NOT_CONNECTED)
         device_to_connect = devices[0]
-        # noinspection PyUnresolvedReferences
-        connection = hid.device()
+        # Create HID device connection
+        connection = hid.device()  # type: ignore
         await asyncio.to_thread(connection.open_path, device_to_connect["path"])
         return DeviceConnection(device_to_connect, connection)
 
@@ -64,20 +66,20 @@ class DeviceConnection(IDeviceConnection):
         connection_info = await get_available_devices()
         return connection_info
 
-    async def get_device_state(self):
-        return self.device["deviceState"]
+    async def get_device_state(self) -> DeviceState:
+        return self.device["device_state"]
 
-    async def is_initialized(self):
+    async def is_initialized(self) -> bool:
         return self.initialized
 
-    async def get_new_sequence_number(self):
+    async def get_new_sequence_number(self) -> int:
         self.sequence_number += 1
         return self.sequence_number
 
-    async def get_sequence_number(self):
+    async def get_sequence_number(self) -> int:
         return self.sequence_number
 
-    async def is_connected(self):
+    async def is_connected(self) -> bool:
         return self.is_port_open
 
     async def destroy(self) -> None:
@@ -88,28 +90,22 @@ class DeviceConnection(IDeviceConnection):
         try:
             self.connection.close()
         except Exception as error:
-            logger.warn('Error while closing device connection')
+            logger.warn("Error while closing device connection")
             logger.warn(error)
 
-    async def before_operation(self):
+    async def before_operation(self) -> None:
         self.data_listener.start_listening()
 
-    async def after_operation(self):
+    async def after_operation(self) -> None:
         self.data_listener.stop_listening()
 
-    # async def send(self, data: bytearray) -> None:
-    #     data_to_write = [0x00] + list(data) + [0x00] * (64 - len(data))
-    #     self.connection.write(bytes(data_to_write))
+    async def send(self, data: bytearray) -> None:
+        data_to_write = [0x00] + list(data) + [0x00] * (64 - len(data))
+        await asyncio.to_thread(self.connection.write, bytes(data_to_write))
 
-    async def send(self, data: bytes) -> None:
-        packet = bytearray(65)  # Report ID (1) + Data (64)
-        packet[0] = 0x00  # Report ID
-        packet[1:1 + len(data)] = data
-        # .write() is a blocking I/O operation
-        await asyncio.to_thread(self.connection.write, bytes(packet))
-
-    async def receive(self) -> Optional[bytes]:
-        return await self.data_listener.receive()
+    async def receive(self) -> Optional[bytearray]:
+        result = await self.data_listener.receive()
+        return bytearray(result) if result is not None else None
 
     async def peek(self) -> List[PoolData]:
         return await self.data_listener.peek()
@@ -117,7 +113,6 @@ class DeviceConnection(IDeviceConnection):
     def on_close(self):
         self.is_port_open = False
 
-    # pylint: disable=no-self-use
     def on_error(self, error: Exception):
-        logger.error('Error on device connection callback')
+        logger.error("Error on device connection callback")
         logger.error(error)

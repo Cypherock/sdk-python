@@ -9,6 +9,7 @@ readme = "README.md"
 python = ">=3.11"
 pyserial = "^3.5"
 semver = "^3.0.0"
+hid = "^1.0.8"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.0"
