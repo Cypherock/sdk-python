@@ -1,14 +1,17 @@
 # Cypherock SDK
 
-This monorepo contains the Python SDK for Cypherock X1, designed to facilitate integration with software wallets like Sparrow Wallet. It is structured to manage multiple independent packages within a single repository.
+This project implements a Bitcoin Hardware Wallet Interface (HWI) for the Cypherock X1 hardware wallet, enabling seamless integration with software wallets like Sparrow Wallet. The Cypherock SDK provides secure communication protocols and compatibility layers to bridge the gap between Cypherock X1 devices and existing software wallet ecosystems. This monorepo is structured to manage multiple independent packages that collectively implement the HWI protocol, handle device communication across different connection types, and ensure robust integration with software wallet features.
 
 ## Project Structure
 
-This monorepo is organized as follows:
-
-- `hw-serialport/`: An independent package for hardware serial port communication with Cypherock X1 devices.
-- `packages/interfaces/`: Defines the interfaces used across the Cypherock SDK.
-- `packages/util/`: Contains utility functions and common functionalities used by other packages.
+```
+packages/
+├── hw_webusb/
+├── hw_hid/
+├── hw_serialport/
+├── interfaces/
+└── util/
+```
 
 ## Getting Started
 
