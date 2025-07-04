@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "hw-webusb"
+version = "0.1.0"
+description = "Hardware WebUSB Connector for Cypherock X1"
+authors = ["Temiloluwa Yusuf <ytemiloluwa@gmail.com>"]
+readme = "README.md"
+packages = [{include = "hw_webusb"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+pyusb = "^1.2.1"
+interfaces = {path = "../interfaces", develop = true}
+util = {path = "../util", develop = true}
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api" 
