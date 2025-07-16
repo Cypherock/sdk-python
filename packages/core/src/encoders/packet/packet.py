@@ -8,14 +8,14 @@ from packages.core.src.utils.packetversion import PacketVersion, PacketVersionMa
 from packages.interfaces.errors import DeviceCompatibilityError, DeviceCompatibilityErrorType
 
 class DecodedPacketData(TypedDict):
-    startOfFrame: str
-    currentPacketNumber: int
-    totalPacketNumber: int
-    payloadData: str
+    start_of_frame: str
+    current_packet_number: int
+    total_packet_number: int
+    payload_data: str
     crc: str
-    sequenceNumber: int
-    packetType: int
-    errorList: List[str]
+    sequence_number: int
+    packet_type: int
+    error_list: List[str]
     timestamp: int
 
 class ErrorPacketRejectReason(Enum):
@@ -261,20 +261,20 @@ def decode_packet(
         if start_of_frame.upper() != start_of_frame.upper():
             error_list.append('Invalid Start of frame')
         if current_packet_number > total_packet_number:
-            error_list.append('currentPacketNumber is greater than totalPacketNumber')
+            error_list.append('current_packet_number is greater than total_packet_number')
         if actual_crc.upper() != crc.upper():
             error_list.append('invalid crc')
 
         packet_list.append(
             DecodedPacketData(
-                startOfFrame=start_of_frame,
-                currentPacketNumber=current_packet_number,
-                totalPacketNumber=total_packet_number,
+                start_of_frame=start_of_frame,
+                current_packet_number=current_packet_number,
+                total_packet_number=total_packet_number,
                 crc=crc,
-                payloadData=payload_data,
-                errorList=error_list,
-                sequenceNumber=sequence_number,
-                packetType=packet_type,
+                payload_data=payload_data,
+                error_list=error_list,
+                sequence_number=sequence_number,
+                packet_type=packet_type,
                 timestamp=timestamp,
             )
         )
@@ -308,8 +308,8 @@ def decode_payload_data(payload: str, version: PacketVersion) -> Dict[str, str]:
     payload_offset += raw_data_size * 2
 
     return {
-        "protobufData": protobuf_data,
-        "rawData": raw_data,
+        "protobuf_data": protobuf_data,
+        "raw_data": raw_data,
     }
 
 
