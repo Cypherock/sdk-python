@@ -1,6 +1,6 @@
-from typing import TypeVar, Union, Optional
+from typing import TypeVar, Union, Any
 T = TypeVar('T')
-def assert_condition(condition: Optional[T], error: Union[str, Exception]) -> None:
+def assert_condition(condition: Any, error: Union[str, Exception]) -> None:
     if condition is None or condition is False:
         if isinstance(error, str):
             raise AssertionError(error)
