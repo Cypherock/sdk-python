@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Awaitable
 
 from packages.interfaces.connection import (
     ConnectionTypeMap,
@@ -19,13 +19,13 @@ class MockDeviceConnection:
         self.pool: List[PoolData] = []
         self.device_state = DeviceState.MAIN
         self.connection_type = ConnectionTypeMap.SERIAL_PORT.value
-        self.on_data: Optional[Callable[[bytes], None]] = None
+        self.on_data: Optional[Callable[[bytes], Awaitable[None]]] = None
 
     def configure_device(self, device_state: DeviceState, connection_type: str) -> None:
         self.device_state = device_state
         self.connection_type = connection_type
 
-    def configure_listeners(self, on_data: Callable[[bytes], None]) -> None:
+    def configure_listeners(self, on_data: Callable[[bytes], Awaitable[None]]) -> None:
         self.on_data = on_data
 
     def remove_listeners(self) -> None:
@@ -66,7 +66,7 @@ class MockDeviceConnection:
             raise DeviceConnectionError(DeviceConnectionErrorType.CONNECTION_CLOSED)
 
         if self.on_data:
-            self.on_data(data)
+            await self.on_data(data)
 
     async def mock_device_send(self, data: bytes) -> None:
         self.pool.append({"id": str(uuid.uuid4()), "data": data})

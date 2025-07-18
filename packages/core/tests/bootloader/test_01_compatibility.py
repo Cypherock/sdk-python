@@ -1,0 +1,157 @@
+import asyncio
+import pytest
+from packages.interfaces import DeviceState
+from packages.interfaces.__mocks__.connection import MockDeviceConnection
+from packages.interfaces.errors.communication_error import DeviceCommunicationErrorType, deviceCommunicationErrorTypeDetails
+
+from ...src.sdk import SDK
+
+
+class TestBootloaderOperation:
+    @pytest.fixture
+    async def setup(self):
+        """Setup fixture for each test"""
+        connection = await MockDeviceConnection.create()
+        connection.configure_device(DeviceState.BOOTLOADER, "MOCK")
+
+        sdk = await SDK.create(connection, 0)  # appletId = 0
+        await connection.before_operation()
+        connection.remove_listeners()
+
+        yield connection, sdk
+
+        await connection.destroy()
+
+    def test_should_have_the_right_configuration(self, setup):
+        """Test SDK configuration in bootloader mode"""
+        def _test():
+            connection, sdk = asyncio.run(setup.__anext__())
+            try:
+                assert sdk.get_version() == "0.0.0"
+                assert sdk.get_packet_version() is None
+                assert asyncio.run(sdk.get_device_state()) == DeviceState.BOOTLOADER
+                assert asyncio.run(sdk.is_in_bootloader()) is True
+                assert asyncio.run(sdk.is_supported()) is False
+            finally:
+                asyncio.run(connection.destroy())
+
+        _test()
+
+    def test_should_be_able_to_send_abort(self, setup):
+        """Test sending bootloader abort command"""
+        async def _test():
+            connection, sdk = await setup.__anext__()
+
+            async def on_data(data: bytes):
+                assert data == bytes([65])
+                await connection.mock_device_send(bytes([24]))
+
+            connection.configure_listeners(on_data)
+            await sdk.send_bootloader_abort()
+
+        asyncio.run(_test())
+
+    def test_should_be_able_to_send_data(self, setup):
+        """Test sending bootloader data"""
+        async def _test():
+            connection, sdk = await setup.__anext__()
+
+            packets = [
+                bytes([
+                    1, 1, 254, 20, 121, 36, 79, 49, 242, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                    255, 255, 255, 250, 80,
+                ]),
+                bytes([4]),
+            ]
+
+            async def on_data(data: bytes):
+                packet_index = next((i for i, elem in enumerate(packets) if elem == data), -1)
+                assert data in packets
+                assert packet_index >= 0
+                await connection.mock_device_send(bytes([6]))
+
+            connection.configure_listeners(on_data)
+
+            # Set in receiving mode
+            await connection.mock_device_send(bytes([67]))
+
+            await sdk.send_bootloader_data("1479244f31f2")
+
+        asyncio.run(_test())
+
+    def test_should_throw_error_when_accessing_other_functions_for_v3(self, setup):
+        """Test that other SDK functions throw errors in bootloader mode"""
+        async def _test():
+            connection, sdk = await setup.__anext__()
+
+            in_bootloader_error = deviceCommunicationErrorTypeDetails[
+                DeviceCommunicationErrorType.IN_BOOTLOADER
+            ]["message"]
+
+            # Test deprecated legacy commands
+            with pytest.raises(Exception) as exc_info:
+                await sdk.deprecated.send_legacy_command(1, "00")
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.deprecated.receive_legacy_command([1], 500)
+            assert in_bootloader_error in str(exc_info.value)
+
+            # Test deprecated raw commands
+            with pytest.raises(Exception) as exc_info:
+                await sdk.deprecated.send_command({
+                    "commandType": 1,
+                    "data": "00",
+                    "sequenceNumber": 1,
+                })
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.deprecated.get_command_output(1)
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.deprecated.wait_for_command_output({
+                    "sequenceNumber": 1,
+                    "expectedCommandTypes": [1],
+                })
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.deprecated.get_command_status()
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.deprecated.send_command_abort(1)
+            assert in_bootloader_error in str(exc_info.value)
+
+            # Test proto commands
+            with pytest.raises(Exception) as exc_info:
+                await sdk.send_query(bytes([10]))
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.wait_for_result()
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.get_result()
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.get_status()
+            assert in_bootloader_error in str(exc_info.value)
+
+            with pytest.raises(Exception) as exc_info:
+                await sdk.send_abort()
+            assert in_bootloader_error in str(exc_info.value)
+
+        asyncio.run(_test())
