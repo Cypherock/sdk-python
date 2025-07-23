@@ -47,7 +47,7 @@ class TestReceiveLegacyCommand:
                     await connection.mock_device_send(data)
             
             # Determine timeout based on data length
-            timeout = 1200 if len(test_case["output"]["data"]) > 200 else config["defaultTimeout"]
+            timeout = 1200 if len(test_case["output"]["data"]) > 200 else config.defaultTimeout
             
             # Execute both operations concurrently
             response, _ = await asyncio.gather(
@@ -74,7 +74,7 @@ class TestReceiveLegacyCommand:
             with pytest.raises(DeviceConnectionError):
                 await sdk.deprecated.receive_legacy_command(
                     test_case["params"]["allAcceptableCommands"],
-                    config["defaultTimeout"],
+                    config.defaultTimeout,
                 )
         
         asyncio.run(_test())
@@ -96,7 +96,7 @@ class TestReceiveLegacyCommand:
             results = await asyncio.gather(
                 sdk.deprecated.receive_legacy_command(
                     test_case["params"]["allAcceptableCommands"],
-                    config["defaultTimeout"],
+                    config.defaultTimeout,
                 ),
                 send_data_from_device(test_case["packetsFromDevice"]),
                 return_exceptions=True
@@ -116,7 +116,7 @@ class TestReceiveLegacyCommand:
             with pytest.raises(Exception):
                 await sdk.deprecated.receive_legacy_command(
                     test_case["allAcceptableCommands"],
-                    config["defaultTimeout"],
+                    config.defaultTimeout,
                 )
         
         asyncio.run(_test())

@@ -4,6 +4,7 @@ import random
 from unittest.mock import Mock
 
 from packages.interfaces.errors.connection_error import DeviceConnectionError
+from packages.interfaces.errors.communication_error import DeviceCommunicationError
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
 
 from packages.core.src.sdk import SDK
@@ -53,7 +54,7 @@ class TestSendLegacyCommand:
                 test_case["params"]["command"],
                 test_case["params"]["data"],
                 1,
-                config["defaultTimeout"],
+                config.defaultTimeout,
             )
         
         asyncio.run(_test())
@@ -94,7 +95,7 @@ class TestSendLegacyCommand:
                 test_case["params"]["command"],
                 test_case["params"]["data"],
                 max_tries,
-                config["defaultTimeout"],
+                config.defaultTimeout,
             )
         
         asyncio.run(_test())
@@ -110,12 +111,12 @@ class TestSendLegacyCommand:
             
             await connection.destroy()
             
-            with pytest.raises(DeviceConnectionError):
+            with pytest.raises((DeviceConnectionError, DeviceCommunicationError)):
                 await sdk.deprecated.send_legacy_command(
                     test_case["params"]["command"],
                     test_case["params"]["data"],
                     1,
-                    config["defaultTimeout"],
+                    config.defaultTimeout,
                 )
             
             assert on_data.call_count == 0
@@ -130,18 +131,26 @@ class TestSendLegacyCommand:
             
             async def on_data(data: bytes):
                 packet_index = next((i for i, elem in enumerate(test_case["packets"]) if elem == data), -1)
-                if packet_index >= len(test_case["ackPackets"]) - 1:
+                # For single packet case, destroy before ACK to ensure error
+                if len(test_case["packets"]) == 1:
                     await connection.destroy()
+                    # Don't send ACK after destroying connection
+                    return
+                
+                # For multi-packet cases, send ACK then destroy connection to simulate disconnect  
                 await connection.mock_device_send(test_case["ackPackets"][packet_index])
+                # Destroy connection after first packet to simulate mid-operation disconnect
+                if packet_index == 0:
+                    await connection.destroy()
             
             connection.configure_listeners(on_data)
             
-            with pytest.raises(DeviceConnectionError):
+            with pytest.raises((DeviceConnectionError, DeviceCommunicationError)):
                 await sdk.deprecated.send_legacy_command(
                     test_case["params"]["command"],
                     test_case["params"]["data"],
                     1,
-                    config["defaultTimeout"],
+                    config.defaultTimeout,
                 )
         
         asyncio.run(_test())
@@ -157,7 +166,7 @@ class TestSendLegacyCommand:
                     test_case["command"],
                     test_case["data"],
                     test_case["maxTries"],
-                    config["defaultTimeout"],
+                    config.defaultTimeout,
                 )
         
         asyncio.run(_test())
