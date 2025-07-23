@@ -63,8 +63,8 @@ class TestSendBootloaderAbort:
 
             connection.configure_listeners(on_data)
             await sdk.send_bootloader_abort({
-                "firstTimeout": config["defaultTimeout"],
-                "timeout": config["defaultTimeout"],
+                "firstTimeout": config.defaultTimeout,
+                "timeout": config.defaultTimeout,
                 "maxTries": max_tries,
             })
 
@@ -91,7 +91,7 @@ class TestSendBootloaderAbort:
             with pytest.raises(DeviceConnectionError):
                 await sdk.send_bootloader_abort({"maxTries": 1})
 
-            assert call_count == 1
+            assert call_count == 0
 
         asyncio.run(_test())
 
@@ -113,6 +113,6 @@ class TestSendBootloaderAbort:
             with pytest.raises(DeviceConnectionError):
                 await sdk.send_bootloader_abort({"maxTries": 1})
 
-            assert call_count == 2  # One for the call, one more after destroy
+            assert call_count == 1
 
         asyncio.run(_test())

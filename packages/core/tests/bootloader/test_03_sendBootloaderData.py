@@ -38,16 +38,17 @@ class TestSendBootloaderData:
                 packet_index = next((i for i, elem in enumerate(test_case["packets"]) if elem == data), -1)
                 assert data in test_case["packets"]
                 assert packet_index >= 0
-                await connection.mock_device_send(bytes([6]))
+                await connection.mock_device_send(bytes([6]))  # ACK response
 
             connection.configure_listeners(on_data)
 
-            # Set in receiving mode
-            await connection.mock_device_send(bytes([67]))
+            # Queue the receiving mode packet
+            await connection.mock_device_send(bytes([67]))  # RECEIVING_MODE_PACKET
+            
             await sdk.send_bootloader_data(test_case["data"], None, {
                 "maxTries": 1,
-                "firstTimeout": config["defaultTimeout"],
-                "timeout": config["defaultTimeout"],
+                "firstTimeout": config.defaultTimeout,
+                "timeout": config.defaultTimeout,
             })
 
         asyncio.run(_test())
@@ -77,17 +78,19 @@ class TestSendBootloaderData:
                 )
 
                 if not do_trigger_error:
-                    await connection.mock_device_send(bytes([6]))
+                    await connection.mock_device_send(bytes([6]))  # ACK response
                 else:
                     total_timeout_triggers += 1
                     retries[packet_index] = current_retry
 
             connection.configure_listeners(on_data)
 
-            await connection.mock_device_send(bytes([67]))
+            # Queue the receiving mode packet
+            await connection.mock_device_send(bytes([67]))  # RECEIVING_MODE_PACKET
+            
             await sdk.send_bootloader_data(test_case["data"], None, {
-                "timeout": config["defaultTimeout"],
-                "firstTimeout": config["defaultTimeout"],
+                "timeout": config.defaultTimeout,
+                "firstTimeout": config.defaultTimeout,
                 "maxTries": max_tries,
             })
 
@@ -102,10 +105,11 @@ class TestSendBootloaderData:
             on_data = Mock()
             connection.configure_listeners(on_data)
 
+            # Don't queue receiving mode packet - should cause error
             with pytest.raises(DeviceBootloaderError):
                 await sdk.send_bootloader_data(test_case["data"], None, {
-                    "timeout": config["defaultTimeout"],
-                    "firstTimeout": config["defaultTimeout"],
+                    "timeout": config.defaultTimeout,
+                    "firstTimeout": config.defaultTimeout,
                     "maxTries": 1,
                 })
 
@@ -122,14 +126,14 @@ class TestSendBootloaderData:
             on_data = Mock()
             connection.configure_listeners(on_data)
 
-            # Set in receiving mode
+            # Queue receiving mode packet
             await connection.mock_device_send(bytes([67]))
             await connection.destroy()
 
             with pytest.raises(DeviceConnectionError):
                 await sdk.send_bootloader_data(test_case["data"], None, {
-                    "timeout": config["defaultTimeout"],
-                    "firstTimeout": config["defaultTimeout"],
+                    "timeout": config.defaultTimeout,
+                    "firstTimeout": config.defaultTimeout,
                     "maxTries": 1,
                 })
 
@@ -154,13 +158,13 @@ class TestSendBootloaderData:
 
             connection.configure_listeners(on_data)
 
-            # Set in receiving mode
+            # Queue receiving mode packet
             await connection.mock_device_send(bytes([67]))
 
             with pytest.raises(DeviceConnectionError):
                 await sdk.send_bootloader_data(test_case["data"], None, {
-                    "timeout": config["defaultTimeout"],
-                    "firstTimeout": config["defaultTimeout"],
+                    "timeout": config.defaultTimeout,
+                    "firstTimeout": config.defaultTimeout,
                     "maxTries": 1,
                 })
 

@@ -24,18 +24,16 @@ class TestBootloaderOperation:
 
     def test_should_have_the_right_configuration(self, setup):
         """Test SDK configuration in bootloader mode"""
-        def _test():
-            connection, sdk = asyncio.run(setup.__anext__())
-            try:
-                assert sdk.get_version() == "0.0.0"
-                assert sdk.get_packet_version() is None
-                assert asyncio.run(sdk.get_device_state()) == DeviceState.BOOTLOADER
-                assert asyncio.run(sdk.is_in_bootloader()) is True
-                assert asyncio.run(sdk.is_supported()) is False
-            finally:
-                asyncio.run(connection.destroy())
+        async def _test():
+            connection, sdk = await setup.__anext__()
+            
+            assert sdk.get_version() == "0.0.0"
+            assert sdk.get_packet_version() is None
+            assert await sdk.get_device_state() == DeviceState.BOOTLOADER
+            assert await sdk.is_in_bootloader() is True
+            assert await sdk.is_supported() is False
 
-        _test()
+        asyncio.run(_test())
 
     def test_should_be_able_to_send_abort(self, setup):
         """Test sending bootloader abort command"""
@@ -76,12 +74,12 @@ class TestBootloaderOperation:
                 packet_index = next((i for i, elem in enumerate(packets) if elem == data), -1)
                 assert data in packets
                 assert packet_index >= 0
-                await connection.mock_device_send(bytes([6]))
+                await connection.mock_device_send(bytes([6]))  # ACK response
 
             connection.configure_listeners(on_data)
 
-            # Set in receiving mode
-            await connection.mock_device_send(bytes([67]))
+            # Queue the receiving mode packet
+            await connection.mock_device_send(bytes([67]))  # RECEIVING_MODE_PACKET
 
             await sdk.send_bootloader_data("1479244f31f2")
 

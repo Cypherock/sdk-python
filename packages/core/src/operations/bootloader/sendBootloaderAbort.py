@@ -25,8 +25,8 @@ async def send_bootloader_abort(
     if options is None:
         options = {}
 
-    timeout = options.get('timeout')
-    first_timeout = options.get('first_timeout')
+    timeout = options.get('timeout', 2000)  # Default timeout 
+    first_timeout = options.get('first_timeout', 2000)  # Default first timeout
     max_tries = options.get('max_tries', 5)
 
     assert_condition(connection, 'Invalid connection')
@@ -38,6 +38,7 @@ async def send_bootloader_abort(
         tries = 1
         inner_max_tries = max_tries
         first_error = None
+        success = False
 
         while tries <= inner_max_tries:
             try:
@@ -47,6 +48,7 @@ async def send_bootloader_abort(
                     timeout=first_timeout if index == 0 else timeout,
                     recheck_time=config.v1.constants.RECHECK_TIME,
                 )
+                success = True
                 break  # Success
             except Exception as e:
                 if not can_retry(e):
@@ -55,12 +57,14 @@ async def send_bootloader_abort(
                     first_error = e
                 tries += 1
 
-        if first_error:
-            raise first_error
-        else:
-            raise DeviceCommunicationError(
-                DeviceCommunicationErrorType.WRITE_ERROR
-            )
+        # Only raise error if we didn't succeed
+        if not success:
+            if first_error:
+                raise first_error
+            else:
+                raise DeviceCommunicationError(
+                    DeviceCommunicationErrorType.WRITE_ERROR
+                )
 
 
 async def write_packet(
@@ -69,72 +73,95 @@ async def write_packet(
     timeout: Optional[int] = 2000,
     recheck_time: int = 500  # in milliseconds
 ) -> None:
+    if timeout is None:
+        timeout = 2000
+
     is_completed = False
-    recheck_task: Optional[asyncio.Task] = None
-    timeout_task: Optional[asyncio.Task] = None
+    success = False
+    timeout_task = None
+    recheck_task = None
 
     def cleanup():
-        nonlocal is_completed, recheck_task, timeout_task
+        nonlocal is_completed, timeout_task, recheck_task
         is_completed = True
-        if recheck_task and not recheck_task.done():
-            recheck_task.cancel()
         if timeout_task and not timeout_task.done():
             timeout_task.cancel()
-
-    async def recheck_packet():
-        nonlocal is_completed
-        try:
-            if not await connection.is_connected():
-                cleanup()
-                raise DeviceConnectionError(DeviceConnectionErrorType.CONNECTION_CLOSED)
-
-            if is_completed:
-                return
-
-            raw_packet = await connection.receive()
-            if not raw_packet:
-                schedule_recheck()
-                return
-
-            e_packet_data = uint8array_to_hex(raw_packet)
-            if ACK_PACKET in e_packet_data:
-                cleanup()
-                return
-
-            schedule_recheck()
-        except Exception:
-            schedule_recheck()
-
-    def schedule_recheck():
-        nonlocal recheck_task
-        if is_completed:
-            return
         if recheck_task and not recheck_task.done():
             recheck_task.cancel()
-        recheck_task = asyncio.create_task(delayed_recheck())
 
-    async def delayed_recheck():
-        await asyncio.sleep(recheck_time / 1000)
-        await recheck_packet()
+    async def recheck_packet():
+        nonlocal success
+        while not is_completed:
+            try:
+                if not await connection.is_connected():
+                    cleanup()
+                    raise DeviceConnectionError(
+                        DeviceConnectionErrorType.CONNECTION_CLOSED
+                    )
+
+                if is_completed:
+                    return
+
+                raw_packet = await connection.receive()
+                if not raw_packet:
+                    await asyncio.sleep(recheck_time / 1000)
+                    continue
+
+                e_packet_data = uint8array_to_hex(raw_packet)
+
+                if ACK_PACKET in e_packet_data:
+                    success = True
+                    cleanup()
+                    return
+
+                await asyncio.sleep(recheck_time / 1000)
+
+            except Exception as error:
+                if hasattr(error, 'code') and error.code in [e.value for e in DeviceConnectionErrorType]:
+                    cleanup()
+                    raise error
+
+                # Continue rechecking on other errors
+                await asyncio.sleep(recheck_time / 1000)
 
     try:
         await connection.send(data)
 
-        # Start timeout
-        if timeout:
-            timeout_task = asyncio.create_task(asyncio.sleep(timeout / 1000))
+        timeout_task = asyncio.create_task(asyncio.sleep(timeout / 1000))
+        recheck_task = asyncio.create_task(recheck_packet())
 
-        schedule_recheck()
+        done, pending = await asyncio.wait(
+            [timeout_task, recheck_task],
+            return_when=asyncio.FIRST_COMPLETED
+        )
 
-        if timeout_task:
-            await timeout_task
-            if not is_completed:
-                cleanup()
-                raise DeviceCommunicationError(DeviceCommunicationErrorType.WRITE_TIMEOUT)
+        # Cancel any remaining tasks
+        for task in pending:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
-    except asyncio.CancelledError:
-        # Ignore task cancellations
-        pass
+        # Check if we succeeded
+        if success:
+            return
+
+        # If we get here, it means we timed out
+        cleanup()
+        if not await connection.is_connected():
+            raise DeviceConnectionError(
+                DeviceConnectionErrorType.CONNECTION_CLOSED
+            )
+        else:
+            raise DeviceCommunicationError(
+                DeviceCommunicationErrorType.WRITE_TIMEOUT
+            )
+
     except Exception as err:
         cleanup()
+        if not await connection.is_connected():
+            raise DeviceConnectionError(
+                DeviceConnectionErrorType.CONNECTION_CLOSED
+            )
         raise err

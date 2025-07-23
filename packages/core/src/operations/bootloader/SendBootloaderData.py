@@ -68,6 +68,8 @@ async def write_packet(
 
     timeout_val = options.get('timeout', 2000)
     is_completed = False
+    success = False
+    error_result = None
     timeout_task = None
     recheck_task = None
 
@@ -80,6 +82,7 @@ async def write_packet(
             recheck_task.cancel()
 
     async def recheck_packet():
+        nonlocal success, error_result
         while not is_completed:
             try:
                 if not await connection.is_connected():
@@ -100,12 +103,14 @@ async def write_packet(
 
                 for error in ERROR_CODES:
                     if error['code'] in e_packet_data:
+                        error_result = DeviceBootloaderError(error['error_obj'])
                         cleanup()
-                        return DeviceBootloaderError(error['error_obj'])
+                        return
 
                 if ACK_PACKET in e_packet_data:
+                    success = True
                     cleanup()
-                    return None
+                    return
 
                 await asyncio.sleep(RECHECK_TIME / 1000)
 
@@ -129,10 +134,21 @@ async def write_packet(
             return_when=asyncio.FIRST_COMPLETED
         )
 
+        # Cancel any remaining tasks
         for task in pending:
             task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
-        if timeout_task in done:
+        # Check results
+        if error_result:
+            return error_result
+        elif success:
+            return None
+        else:
+            # Timeout case
             cleanup()
             if not await connection.is_connected():
                 raise DeviceConnectionError(
@@ -142,10 +158,6 @@ async def write_packet(
                 raise DeviceCommunicationError(
                     DeviceCommunicationErrorType.WRITE_TIMEOUT
                 )
-
-        if recheck_task in done:
-            result = recheck_task.result()
-            return result
 
     except Exception as err:
         cleanup()
@@ -165,6 +177,7 @@ async def check_if_in_receiving_mode(
 
     timeout_val = options.get('timeout', 2000)
     is_completed = False
+    success = False
     timeout_task = None
     recheck_task = None
 
@@ -177,6 +190,7 @@ async def check_if_in_receiving_mode(
             recheck_task.cancel()
 
     async def recheck_packet():
+        nonlocal success
         while not is_completed:
             try:
                 if not await connection.is_connected():
@@ -196,6 +210,7 @@ async def check_if_in_receiving_mode(
                 e_packet_data = uint8array_to_hex(raw_packet)
 
                 if RECEIVING_MODE_PACKET in e_packet_data:
+                    success = True
                     cleanup()
                     return
 
@@ -218,19 +233,28 @@ async def check_if_in_receiving_mode(
         return_when=asyncio.FIRST_COMPLETED
     )
 
+    # Cancel any remaining tasks
     for task in pending:
         task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
-    if timeout_task in done:
-        cleanup()
-        if not await connection.is_connected():
-            raise DeviceConnectionError(
-                DeviceConnectionErrorType.CONNECTION_CLOSED
-            )
-        else:
-            raise DeviceBootloaderError(
-                DeviceBootloaderErrorType.NOT_IN_RECEIVING_MODE
-            )
+    # Check if we succeeded
+    if success:
+        return
+
+    # If we get here, it means we timed out or failed
+    cleanup()
+    if not await connection.is_connected():
+        raise DeviceConnectionError(
+            DeviceConnectionErrorType.CONNECTION_CLOSED
+        )
+    else:
+        raise DeviceBootloaderError(
+            DeviceBootloaderErrorType.NOT_IN_RECEIVING_MODE
+        )
 
 
 async def send_bootloader_data(
