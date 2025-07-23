@@ -1,5 +1,5 @@
 from typing import TypedDict, List
-from packages.core.src.config import command as config
+from packages.core.src import config
 from packages.util.utils.assert_utils import assert_condition
 from packages.util.utils import is_hex, uint8array_to_hex, hex_to_uint8array, int_to_uint_byte, crc16, pad_start
 from packages.core.src.utils.packetversion import PacketVersion, PacketVersionMap
@@ -125,9 +125,9 @@ def xmodem_decode(
         offset += usable_config.radix.total_packet // 4
 
         data_chunk = un_stuffed_data[
-            offset : len(un_stuffed_data) - 6 * 2
+            offset : len(un_stuffed_data) - usable_config.radix.crc // 4
         ]
-        offset += len(un_stuffed_data) - 6 * 2
+        offset += len(un_stuffed_data) - usable_config.radix.crc // 4
 
         crc = un_stuffed_data[
             offset : offset + usable_config.radix.crc // 4

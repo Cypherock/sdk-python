@@ -1,4 +1,4 @@
-from ....utils.packetversion import PacketVersionMap
+from packages.core.src.utils.packetversion import PacketVersionMap
 
 # ACK packet creation test cases
 create_ack_packet_test_cases = {

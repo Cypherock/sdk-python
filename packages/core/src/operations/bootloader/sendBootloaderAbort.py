@@ -12,8 +12,8 @@ from packages.util.utils.crypto import (
     uint8array_to_hex,
     assert_condition,
 )
-from packages.core.src.config import command as config
-from ..helpers.can_retry import can_retry
+from packages.core.src import config
+from packages.core.src.operations.helpers.can_retry import can_retry
 
 ACK_PACKET = '18'
 

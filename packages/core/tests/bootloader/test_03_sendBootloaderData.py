@@ -8,9 +8,9 @@ from packages.interfaces.errors.connection_error import DeviceConnectionError
 from packages.interfaces import DeviceState
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
 
-from ...src.sdk import SDK
-from ..__fixtures__.config import config
-from .__fixtures__.sendBootloaderData import send_bootloader_data_test_cases
+from packages.core.src.sdk import SDK
+from packages.core.tests.__fixtures__.config import config
+from packages.core.tests.bootloader.__fixtures__.sendBootloaderData import send_bootloader_data_test_cases
 
 
 class TestSendBootloaderData:

@@ -1,7 +1,7 @@
 import os
 from typing import TypedDict, List, Dict
 from enum import Enum
-from packages.core.src.config import command as config
+from packages.core.src import config
 from packages.util.utils.assert_utils import assert_condition
 from packages.util.utils import is_hex, uint8array_to_hex, hex_to_uint8array, int_to_uint_byte, crc16
 from packages.core.src.utils.packetversion import PacketVersion, PacketVersionMap

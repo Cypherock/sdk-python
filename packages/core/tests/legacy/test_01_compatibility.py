@@ -5,8 +5,8 @@ from packages.interfaces.errors.bootloader_error import DeviceBootloaderErrorTyp
 from packages.interfaces.errors.compatibility_error import DeviceCompatibilityErrorType, deviceCompatibilityErrorTypeDetails
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
 
-from ...src.sdk import SDK
-from ...src.utils.packetversion import PacketVersionMap
+from packages.core.src.sdk import SDK
+from packages.core.src.utils.packetversion import PacketVersionMap
 
 
 class TestLegacyDeviceOperationV1:

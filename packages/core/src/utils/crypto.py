@@ -1,7 +1,7 @@
 from packages.util.utils.assert_utils import assert_condition
 from packages.util.utils.crypto import uint8array_to_hex
-from ..config import v1, v2
-from .packetversion import PacketVersion, PacketVersionMap
+from packages.core.src.config import v1, v2
+from packages.core.src.utils.packetversion import PacketVersion, PacketVersionMap
 
 
 def byte_unstuffing(input_buff: bytes, version: PacketVersion) -> str:
@@ -20,7 +20,7 @@ def byte_unstuffing(input_buff: bytes, version: PacketVersion) -> str:
     while i < size:
         if input_buff[i] == 0xa3 and i < size - 1:
             if input_buff[i + 1] == 0x3a:
-                output_data.append(usable_config['constants']['STUFFING_BYTE'])
+                output_data.append(usable_config.constants.STUFFING_BYTE)
                 i += 1
             elif input_buff[i + 1] == 0x33:
                 output_data.append(0xa3)
@@ -48,7 +48,7 @@ def byte_stuffing(input_buff: bytes, version: PacketVersion) -> str:
 
     output_data = []
     for byte in input_buff:
-        if byte == usable_config['constants']['STUFFING_BYTE']:
+        if byte == usable_config.constants.STUFFING_BYTE:
             output_data.append(0xa3)
             output_data.append(0x3a)
         elif byte == 0xa3:

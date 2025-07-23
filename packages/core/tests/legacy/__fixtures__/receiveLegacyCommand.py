@@ -4,7 +4,7 @@ legacy_receive_command_test_cases = {
             "allAcceptableCommands": None,
         },
         {
-            "allAcceptableCommands": None,  # undefined -> None
+            "allAcceptableCommands": None,
         },
         {
             "allAcceptableCommands": [],

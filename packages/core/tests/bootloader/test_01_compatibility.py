@@ -4,7 +4,7 @@ from packages.interfaces import DeviceState
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
 from packages.interfaces.errors.communication_error import DeviceCommunicationErrorType, deviceCommunicationErrorTypeDetails
 
-from ...src.sdk import SDK
+from packages.core.src.sdk import SDK
 
 
 class TestBootloaderOperation:

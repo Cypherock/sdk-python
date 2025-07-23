@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Any
 from packages.util.utils.assert_utils import assert_condition
 from packages.util.utils.crypto import format_hex, is_hex
 from packaging import version
-from .packetversion import PacketVersion, PacketVersionMap
+from packages.core.src.utils.packetversion import PacketVersion, PacketVersionMap
 
 SDK_TO_PACKET_VERSION_MAP: List[Dict[str, Any]] = [
     {'from': '0.0.1', 'to': '1.0.0', 'packetVersion': PacketVersionMap.v1},

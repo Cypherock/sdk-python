@@ -11,11 +11,6 @@ from packages.interfaces.errors.connection_error import (
      DeviceConnectionError,
      DeviceConnectionErrorType
 )
-
-from packages.interfaces.errors.app_error import (
-    DeviceAppError,
-    DeviceAppErrorType
-)
 from packages.interfaces.errors.bootloader_error import (
     DeviceBootloaderError,
     DeviceBootloaderErrorType
@@ -40,8 +35,6 @@ __all__ = [
     'LogCreator',
     'DeviceConnectionError',
     'DeviceConnectionErrorType',
-    'DeviceAppError',
-    'DeviceAppErrorType',
     'DeviceBootloaderError',
     'DeviceBootloaderErrorType',
     'DeviceCommunicationError',

@@ -41,7 +41,7 @@ def decode_status(data: str, version: PacketVersion) -> StatusData:
     offset = 0
 
     # Parse device state
-    device_state_size = usable_config['radix']['status']['deviceState'] // 4
+    device_state_size = usable_config.radix.status.device_state // 4
     device_state_hex = data[offset:offset + device_state_size] if data[offset:offset + device_state_size] else "0"
     device_state = int(f"0x{device_state_hex}", 16) or 0
     offset += device_state_size
@@ -52,25 +52,25 @@ def decode_status(data: str, version: PacketVersion) -> StatusData:
     device_waiting_on = DeviceWaitOn(num >> 4)
 
     # Parse abort disabled
-    abort_disabled_size = usable_config['radix']['status']['abortDisabled'] // 4
+    abort_disabled_size = usable_config.radix.status.abort_disabled // 4
     abort_disabled_hex = data[offset:offset + abort_disabled_size] if data[offset:offset + abort_disabled_size] else "0"
     abort_disabled = int(f"0x{abort_disabled_hex}", 16) == 1
     offset += abort_disabled_size
 
     # Parse current command sequence
-    current_cmd_seq_size = usable_config['radix']['status']['currentCmdSeq'] // 4
+    current_cmd_seq_size = usable_config.radix.status.current_cmd_seq // 4
     current_cmd_seq_hex = data[offset:offset + current_cmd_seq_size] if data[offset:offset + current_cmd_seq_size] else "0"
     current_cmd_seq = int(f"0x{current_cmd_seq_hex}", 16) or 0
     offset += current_cmd_seq_size
 
     # Parse command state
-    cmd_state_size = usable_config['radix']['status']['cmdState'] // 4
+    cmd_state_size = usable_config.radix.status.cmd_state // 4
     cmd_state_hex = data[offset:offset + cmd_state_size] if data[offset:offset + cmd_state_size] else "0"
     cmd_state = CmdState(int(f"0x{cmd_state_hex}", 16) or 0)
     offset += cmd_state_size
 
     # Parse flow status
-    flow_status_size = usable_config['radix']['status']['flowStatus'] // 4
+    flow_status_size = usable_config.radix.status.flow_status // 4
     flow_status_hex = data[offset:offset + flow_status_size] if data[offset:offset + flow_status_size] else "0"
     flow_status = int(f"0x{flow_status_hex}", 16) or 0
     offset += flow_status_size
@@ -118,7 +118,7 @@ def encode_raw_data(params: RawData, version: PacketVersion) -> str:
     usable_config = config
 
     data = (
-        int_to_uint_byte(params['commandType'], usable_config['radix']['commandType']) +
+        int_to_uint_byte(params['commandType'], usable_config.radix.command_type) +
         params['data']
     )
 
@@ -153,7 +153,7 @@ def decode_raw_data(payload: str, version: PacketVersion) -> RawData:
     offset = 0
 
     # Parse command type
-    command_type_size = usable_config['radix']['commandType'] // 4
+    command_type_size = usable_config.radix.command_type // 4
     received_command_type = int(
         payload[offset:offset + command_type_size],
         16,

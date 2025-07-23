@@ -4,7 +4,7 @@ from packages.interfaces.connection import IDeviceConnection
 from packages.interfaces.errors import DeviceConnectionError, DeviceConnectionErrorType, DeviceCommunicationError, DeviceCommunicationErrorType, DeviceCompatibilityError, DeviceCompatibilityErrorType
 from packages.util.utils.assert_utils import assert_condition
 from packages.util.utils.crypto import is_hex
-from packages.core.src.config import command as config
+from packages.core.src import config
 from packages.core.src.utils.packetversion import PacketVersion, PacketVersionMap
 from packages.core.src.encoders.packet.legacy import xmodem_encode, xmodem_decode
 

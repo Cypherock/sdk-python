@@ -1,7 +1,5 @@
 from typing import Optional, Dict, Any, Callable, Awaitable, List
 from packages.interfaces import (
-    DeviceAppError,
-    DeviceAppErrorType,
     DeviceBootloaderError,
     DeviceBootloaderErrorType,
     DeviceCommunicationError,
@@ -26,6 +24,7 @@ from packages.core.src.encoders.proto.types import DeviceIdleState
 from packages.core.src.encoders.raw.types import DeviceIdleState as RawDeviceIdleState
 from packages.core.src.utils.logger import logger
 from packages.core.src.encoders.proto.generated.types import IAppVersionResultResponse
+from packages.interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
 
 
 class SDK:
@@ -50,7 +49,7 @@ class SDK:
         applet_id: int,
         options: Optional[Dict[str, Any]] = None,
     ) -> "SDK":
-        max_tries = options.get("maxTries") if options else None
+        max_tries = options.get("max_tries") if options else None
         timeout = options.get("timeout") if options else None
         
         sdk_data = await cls.get_sdk_version(connection, max_tries, timeout)
@@ -59,26 +58,6 @@ class SDK:
             applet_id,
             sdk_data["sdkVersion"],
             sdk_data.get("packetVersion"),
-        )
-
-    @staticmethod
-    async def send_abort(
-        connection: IDeviceConnection,
-        options: Optional[Dict[str, Any]] = None,
-    ):
-        sequence_number = options.get("sequenceNumber") if options else None
-        if sequence_number is None:
-            sequence_number = await connection.get_new_sequence_number()
-            
-        max_tries = options.get("maxTries") if options else None
-        timeout = options.get("timeout") if options else None
-        
-        return await operations.send_abort(
-            connection=connection,
-            sequence_number=sequence_number,
-            version=PacketVersionMap.v3,
-            max_tries=max_tries,
-            timeout=timeout,
         )
 
     def get_connection(self) -> IDeviceConnection:
@@ -139,12 +118,16 @@ class SDK:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
-        sequence_number = options.get("sequenceNumber") if options else None
+        sequence_number = options.get("sequence_number") if options else None
         if sequence_number is None:
             sequence_number = await self.get_new_sequence_number()
             
-        max_tries = options.get("maxTries") if options else None
+        max_tries = options.get("max_tries") if options else None
         timeout = options.get("timeout") if options else None
+
+        # Set defaults for None values
+        if max_tries is None:
+            max_tries = 5
 
         return await operations.send_query(
             connection=self.connection,
@@ -170,12 +153,16 @@ class SDK:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
-        sequence_number = options.get("sequenceNumber") if options else None
+        sequence_number = options.get("sequence_number") if options else None
         if sequence_number is None:
             sequence_number = await self.get_sequence_number()
             
-        max_tries = options.get("maxTries") if options else None
+        max_tries = options.get("max_tries") if options else None
         timeout = options.get("timeout") if options else None
+
+        # Set defaults for None values
+        if max_tries is None:
+            max_tries = 5
 
         return await operations.get_result(
             connection=self.connection,
@@ -200,11 +187,11 @@ class SDK:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
-        sequence_number = params.get("sequenceNumber") if params else None
+        sequence_number = params.get("sequence_number") if params else None
         if sequence_number is None:
             sequence_number = await self.get_sequence_number()
             
-        on_status = params.get("onStatus") if params else None
+        on_status = params.get("on_status") if params else None
         options = params.get("options") if params else None
 
         return await operations.wait_for_result(
@@ -235,6 +222,12 @@ class SDK:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
+        # Set defaults for None values
+        if max_tries is None:
+            max_tries = 5
+        if dont_log is None:
+            dont_log = False
+
         return await operations.get_status(
             connection=self.connection,
             version=self.packet_version,
@@ -257,12 +250,16 @@ class SDK:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
-        sequence_number = options.get("sequenceNumber") if options else None
+        sequence_number = options.get("sequence_number") if options else None
         if sequence_number is None:
             sequence_number = await self.get_new_sequence_number()
             
-        max_tries = options.get("maxTries") if options else None
+        max_tries = options.get("max_tries") if options else None
         timeout = options.get("timeout") if options else None
+
+        # Set defaults for None values
+        if max_tries is None:
+            max_tries = 5
 
         return await operations.send_abort(
             connection=self.connection,
@@ -294,7 +291,6 @@ class SDK:
             result = await commands.get_app_versions(
                 connection=self.connection,
                 options=options,
-                sequence_number=await self.get_new_sequence_number(),
                 on_status=on_status,
             )
             self.app_versions_map = result
