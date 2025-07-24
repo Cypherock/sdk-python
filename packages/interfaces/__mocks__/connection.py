@@ -75,12 +75,15 @@ class MockDeviceConnection:
                 await self.on_data()
 
     async def mock_device_send(self, data: bytes) -> None:
-        self.pool.append({"id": str(uuid.uuid4()), "data": data})
+        packet_data = {"id": str(uuid.uuid4()), "data": data}
+        self.pool.append(packet_data)
 
     async def receive(self) -> Optional[bytes]:
         if not self.pool:
             return None
-        return self.pool.pop(0).get("data")
+        packet = self.pool.pop(0)
+        data = packet.get("data")
+        return data
 
     async def peek(self) -> List[PoolData]:
         return self.pool.copy()

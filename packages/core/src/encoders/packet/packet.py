@@ -1,4 +1,5 @@
 import os
+import time
 from typing import TypedDict, List, Dict
 from enum import Enum
 from packages.core.src import config
@@ -149,8 +150,11 @@ def encode_packet(
             len(data_chunk) // 2,
             usable_config.radix.payload_length,
         )
+        # Match TypeScript behavior: Date.now().toString().slice(0, timestampLength / 4)
+        timestamp_ms = int(time.time() * 1000)  # JavaScript Date.now() equivalent
+        timestamp_str = str(timestamp_ms)[:usable_config.radix.timestamp_length // 4]
         serialized_timestamp = int_to_uint_byte(
-            int(str(int(os.times().elapsed))[:usable_config.radix.timestamp_length // 4]),
+            int(timestamp_str),
             usable_config.radix.timestamp_length,
         )
 

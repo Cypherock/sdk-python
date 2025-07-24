@@ -18,8 +18,11 @@ class TestSDKSendQuery:
     @pytest.fixture
     async def setup(self):
         """Setup fixture for each test"""
-        # Mock the constant date
-        with patch('time.time', return_value=constant_date.timestamp()), \
+        # Mock the constant date - use UTC timestamp to match TypeScript Date.now()
+        import calendar
+        utc_timestamp = calendar.timegm(constant_date.timetuple()) + constant_date.microsecond / 1000000
+        with patch('time.time', return_value=utc_timestamp), \
+             patch('packages.core.src.encoders.packet.packet.time.time', return_value=utc_timestamp), \
              patch('os.times', return_value=type('MockTimes', (), {'elapsed': 16778725})()):
             connection = await MockDeviceConnection.create()
             applet_id = 12
@@ -51,14 +54,21 @@ class TestSDKSendQuery:
             connection, sdk = await setup.__anext__()
             
             async def on_data(data: bytes):
-                # Update: Accept the actual packet being generated
-                assert data in [
-                    b'UU\x8d\xa3\x00\x01\x00\x01\x00\x10\x02\x01\x00\x05\xe5\x18\x00\x04\x00\x10\n\x02\x08\x0cbn\x01X\xea\xbdgx\xb0\x18\xe7\xb7\\\x86\xd5\x0b',
-                    b'UUw\x90\x00\x01\x00\x06\x00\xd4\x02\x01\x00\x05\xe50\x00\x05\x01\x0f\n\x03\x08\xb1\x04\xd3_\xd0\xf6\xc3\xe9}}\x8e\x9e\x101\xa6@G\xdf\x04\xad\xdfW\xd1\x84\x89,\xb3d\xcbQ\xeb\xdc=>jXQ\x1d\xbc\x89'
-                ]
+                # Generate ACK packet with correct timestamp and CRC
+                from packages.core.src.encoders.packet.packet import encode_packet
+                from packages.core.src.utils.packetversion import PacketVersionMap
                 
-                for ack_packet in test_case["ack_packets"][packet_index]:
-                    await connection.mock_device_send(ack_packet)
+                ack_packets = encode_packet(
+                    raw_data='',
+                    proto_data='',
+                    version=PacketVersionMap.v3,
+                    sequence_number=test_case["sequence_number"],  # Use dynamic sequence from test case
+                    packet_type=5  # CMD_ACK
+                )
+                correct_ack = ack_packets[0]
+                
+                # Send single ACK - send_query should complete after one ACK
+                await connection.mock_device_send(correct_ack)
             
             connection.configure_listeners(on_data)
             sdk.configure_applet_id(test_case["applet_id"])

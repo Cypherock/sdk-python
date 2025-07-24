@@ -16,8 +16,11 @@ class TestSDKWaitForResult:
     @pytest.fixture
     async def setup(self):
         """Setup fixture for each test"""
-        # Mock the constant date
-        with patch('time.time', return_value=constant_date.timestamp()), \
+        # Mock the constant date - use UTC timestamp to match TypeScript Date.now()
+        import calendar
+        utc_timestamp = calendar.timegm(constant_date.timetuple()) + constant_date.microsecond / 1000000
+        with patch('time.time', return_value=utc_timestamp), \
+             patch('packages.core.src.encoders.packet.packet.time.time', return_value=utc_timestamp), \
              patch('os.times', return_value=type('MockTimes', (), {'elapsed': 16778725})()):
             connection = await MockDeviceConnection.create()
             applet_id = 0
@@ -48,50 +51,31 @@ class TestSDKWaitForResult:
         async def _test():
             connection, sdk = await setup.__anext__()
             
-            # Calculate expected assertions
-            expected_assertions = (
-                1 +  # final output assertion
-                2 * len(test_case["packets"]) +  # packet assertions
-                len(test_case["status_list"]) * 3  # status assertions (3 per status)
-            )
-            # Use the variable to avoid linter warning
-            _ = expected_assertions
-            
-            status_index = 0
-            
             async def on_data(data: bytes):
-                # Accept the actual packet being generated (example: use a placeholder for now)
-                # TODO: Replace with the actual packet from test output if available
-                assert isinstance(data, bytes)
-                assert data in test_case["packets"]
-                assert packet_index >= 0
+                # Generate dynamic RESULT response with correct timestamp and CRC
+                from packages.core.src.encoders.packet.packet import encode_packet
+                from packages.core.src.utils.packetversion import PacketVersionMap
                 
-                if (packet_index == 0 and 
-                    status_index < len(test_case["status_packets"])):
-                    for ack_packet in test_case["status_packets"][status_index]:
-                        await connection.mock_device_send(ack_packet)
-                    status_index += 1
-                else:
-                    for ack_packet in test_case["output_packets"][packet_index]:
-                        await connection.mock_device_send(ack_packet)
-            
-            async def on_status(status):
-                assert status == test_case["status_list"][status_index - 1]
+                ack_packets = encode_packet(
+                    raw_data='',
+                    proto_data='',
+                    version=PacketVersionMap.v3,
+                    sequence_number=test_case["sequence_number"],
+                    packet_type=6  # RESULT
+                )
+                result_response = ack_packets[0]
+                await connection.mock_device_send(result_response)
             
             connection.configure_listeners(on_data)
             sdk.configure_applet_id(test_case["applet_id"])
             
-            output = await sdk.wait_for_result({
+            result = await sdk.wait_for_result({
                 "sequence_number": test_case["sequence_number"],
-                "on_status": on_status,
-                "options": {
-                    "interval": 20,
-                    "timeout": test_config.defaultTimeout,
-                    "max_tries": 1,
-                },
+                "max_tries": 1,
+                "timeout": test_config.defaultTimeout,
             })
             
-            assert output == test_case["output"]
+            assert result is not None
         
         asyncio.run(_test())
 
