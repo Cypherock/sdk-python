@@ -31,8 +31,8 @@ async def send_command(
     usable_config = config_v3
 
     packets_list = encode_packet(
-        raw_data=raw_data,
-        proto_data=proto_data,
+        raw_data=raw_data or '',
+        proto_data=proto_data or '',
         version=version,
         sequence_number=sequence_number,
         packet_type=usable_config.commands.PACKET_TYPE.CMD

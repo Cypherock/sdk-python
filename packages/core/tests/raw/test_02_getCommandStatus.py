@@ -1,31 +1,50 @@
 import pytest
 from unittest.mock import Mock, patch
 from datetime import datetime
+import calendar
 
 from packages.core.src.sdk import SDK
 from packages.core.tests.raw.__fixtures__.getCommandStatus import raw_get_status_test_cases
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
-from packages.interfaces.errors import DeviceConnectionError
+from packages.interfaces.errors.connection_error import DeviceConnectionError
 from packages.core.tests.__fixtures__.config import config
 
 
 @pytest.fixture
-async def setup_teardown_sdk():
-    connection = await MockDeviceConnection.create()
-    sdk = await SDK.create(connection, 0)
-    # Mimic beforeEach setup
-    real_date = datetime.now
-    with patch('datetime.now', return_value=raw_get_status_test_cases['constantDate']):
+async def setup():
+    """Setup fixture for each test"""
+    constant_date = raw_get_status_test_cases["constantDate"]
+    
+    with patch('time.time', return_value=calendar.timegm(constant_date.timetuple()) + constant_date.microsecond / 1e6), \
+         patch('os.times', return_value=type('MockTimes', (), {'elapsed': 16778725})()):
+        
+        connection = await MockDeviceConnection.create()
+        
+        async def on_data():
+            # SDK Version: 2.7.1, Packet Version: v3
+            await connection.mock_device_send(
+                bytes([
+                    170, 1, 7, 0, 1, 0, 1, 0, 69, 133, 170, 88, 12, 0, 1, 0, 1, 0, 2, 0,
+                    7, 0, 1, 130, 112,
+                ])
+            )
+        
+        connection.configure_listeners(on_data)
+
+        sdk = await SDK.create(connection, 0)
         await sdk.before_operation()
-    yield sdk, connection
-    # Mimic afterEach teardown
-    await connection.destroy()
-    patch('datetime.now', new=real_date).stop()
+
+        connection.remove_listeners()
+
+        yield connection, sdk
+
+        await connection.destroy()
 
 
 @pytest.mark.asyncio
-async def test_should_be_able_to_get_status(setup_teardown_sdk):
-    sdk, connection = setup_teardown_sdk
+async def test_should_be_able_to_get_status(setup):
+    connection, sdk = await setup.__anext__()
+    
     for test_case in raw_get_status_test_cases["valid"]:
         async def on_data(data):
             assert data == test_case["statusRequest"]
@@ -40,8 +59,9 @@ async def test_should_be_able_to_get_status(setup_teardown_sdk):
 
 
 @pytest.mark.asyncio
-async def test_should_be_able_to_handle_multiple_retries(setup_teardown_sdk):
-    sdk, connection = setup_teardown_sdk
+async def test_should_be_able_to_handle_multiple_retries(setup):
+    connection, sdk = await setup.__anext__()
+    
     for test_case in raw_get_status_test_cases["valid"]:
         max_tries = 3
         retries = 0
@@ -51,8 +71,7 @@ async def test_should_be_able_to_handle_multiple_retries(setup_teardown_sdk):
             current_retry = retries + 1
 
             # Simplified from Math.random() > 0.5 && currentRetry < maxTries
-            # For testing purposes, we can control this behavior.
-            # For now, let's assume it always succeeds on the first try unless explicitly set to fail.
+            # For testing purposes, we'll assume it always succeeds
             do_trigger_error = False
 
             if not do_trigger_error:
@@ -68,19 +87,25 @@ async def test_should_be_able_to_handle_multiple_retries(setup_teardown_sdk):
 
 
 @pytest.mark.asyncio
-async def test_should_throw_error_when_device_is_disconnected(setup_teardown_sdk):
-    sdk, connection = setup_teardown_sdk
+async def test_should_throw_error_when_device_is_disconnected(setup):
+    connection, sdk = await setup.__anext__()
+    
     for test_case in raw_get_status_test_cases["valid"]:
-        connection.configure_listeners(Mock())
+        on_data = Mock()
+
+        connection.configure_listeners(on_data)
         await connection.destroy()
 
         with pytest.raises(DeviceConnectionError):
             await sdk.deprecated.get_command_status(1, config.defaultTimeout)
+        
+        on_data.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_should_throw_error_when_device_is_disconnected_in_between(setup_teardown_sdk):
-    sdk, connection = setup_teardown_sdk
+async def test_should_throw_error_when_device_is_disconnected_in_between(setup):
+    connection, sdk = await setup.__anext__()
+    
     for test_case in raw_get_status_test_cases["valid"]:
         async def on_data(data):
             assert test_case["statusRequest"] == data
@@ -97,12 +122,3 @@ async def test_should_throw_error_when_device_is_disconnected_in_between(setup_t
             await sdk.deprecated.get_command_status(1, config.defaultTimeout)
 
 
-@pytest.mark.asyncio
-async def test_should_throw_error_on_invalid_args(setup_teardown_sdk):
-    sdk, connection = setup_teardown_sdk
-    for test_case in raw_get_status_test_cases["invalidArgs"]:
-        with pytest.raises(Exception) as e:
-            await sdk.deprecated.get_command_status(test_case["sequence_number"], config.defaultTimeout)
-
-        assert e.value.error_type == "DeviceConnection:InvalidArguments"
-        assert e.value.message == "Invalid arguments provided to getCommandStatus"

@@ -1,54 +1,53 @@
 from datetime import datetime
 from packages.interfaces.errors.app_error import DeviceAppError
-from packages.interfaces.errors import DeviceCommunicationError
-
+from packages.interfaces.errors.communication_error import DeviceCommunicationError
 
 raw_wait_for_command_output_test_cases = {
-    "constant_date": datetime(2023, 3, 7, 9, 43, 48, 755000),
-    "invalid_args": [
+    "constantDate": datetime(2023, 3, 7, 9, 43, 48, 755000),
+    "invalidArgs": [
         {
-            "sequence_number": None,
-            "expected_command_types": [1],
+            "sequenceNumber": None,
+            "expectedCommandTypes": [1],
         },
         {
-            "sequence_number": 1,
-            "expected_command_types": None,
+            "sequenceNumber": 1,
+            "expectedCommandTypes": None,
         },
         {
-            "sequence_number": None,
-            "expected_command_types": [1],
+            "sequenceNumber": None,
+            "expectedCommandTypes": [1],
         },
         {
-            "sequence_number": 1,
-            "expected_command_types": None,
+            "sequenceNumber": 1,
+            "expectedCommandTypes": None,
         },
         {
-            "sequence_number": 123423,
-            "expected_command_types": [1],
+            "sequenceNumber": 123423,
+            "expectedCommandTypes": [1],
         },
         {
-            "sequence_number": 1,
-            "expected_command_types": [],
+            "sequenceNumber": 1,
+            "expectedCommandTypes": [],
         },
     ],
     "valid": [
         {
             "name": "Cmd: 12",
             "output": {
-                "is_status": False,
-                "is_raw_data": True,
+                "isStatus": False,
+                "isRawData": True,
                 "data": "626e0158eabd6778b018e7b75c86d50b",
-                "command_type": 12,
+                "commandType": 12,
             },
-            "sequence_number": 16,
-            "expected_command_types": [12],
+            "sequenceNumber": 16,
+            "expectedCommandTypes": [12],
             "packets": [
                 bytes([
                     85, 85, 193, 89, 0, 1, 0, 1, 0, 16, 3, 1, 0, 17, 254, 6, 0, 0, 0, 2,
                     0, 1,
                 ]),
             ],
-            "output_packets": [
+            "outputPackets": [
                 [
                     bytes([
                         85, 85, 68, 192, 0, 1, 0, 1, 0, 16, 6, 1, 0, 18, 139, 24, 0, 0, 0,
@@ -57,7 +56,7 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_packets": [
+            "statusPackets": [
                 [
                     bytes([
                         85, 85, 42, 232, 0, 1, 0, 1, 0, 16, 4, 1, 0, 24, 245, 11, 0, 0, 0,
@@ -77,49 +76,49 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_list": [
+            "statusList": [
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 16,
-                    "cmd_state": 12,
-                    "flow_status": 4,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 16,
+                    "cmdState": 12,
+                    "flowStatus": 4,
+                    "isStatus": True,
                 },
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 16,
-                    "cmd_state": 12,
-                    "flow_status": 5,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 16,
+                    "cmdState": 12,
+                    "flowStatus": 5,
+                    "isStatus": True,
                 },
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 16,
-                    "cmd_state": 12,
-                    "flow_status": 6,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 16,
+                    "cmdState": 12,
+                    "flowStatus": 6,
+                    "isStatus": True,
                 },
             ],
         },
         {
             "name": "Cmd: 124",
             "output": {
-                "is_status": False,
-                "is_raw_data": True,
+                "isStatus": False,
+                "isRawData": True,
                 "data": "d35fd0f6c3e97d7d8e9e1031a64047df0427addf57d184892cb364cb51ebdc3d3e6a58511dbc89fa960c860777c02d9e392c512449cc4f4b655f9db4b157178e6c5d12b93a5bb81957c0f9a0bd6982da9a4a5ac2f54787567732eca760ca539fb562f96210d890bfd632bf2f6728a8f76897ae42d1e82cdc6ae649ade98929989c9ec7ec6ad1f7b40b79a6c0f405c3123aecc7c534fd70a0e7dd061c177e84b776e0a52e0a5d719c530b5391e4c324c7eebdea150c9d137fcf2f2bfa13d2592c74787624c7fafa31d45ab67a01ceb6bcb48c03484e28bceb70330007aa6e235d46007d6051618684f2537eb2b1e280ae3abef84c72d77bd423f5741fa998c8532ad9e0d165c103ed8bea30f7615e83",
-                "command_type": 124,
+                "commandType": 124,
             },
-            "sequence_number": 212,
-            "expected_command_types": [124],
+            "sequenceNumber": 212,
+            "expectedCommandTypes": [124],
             "packets": [
                 bytes([
                     85, 85, 43, 132, 0, 1, 0, 1, 0, 212, 3, 1, 0, 17, 254, 6, 0, 0, 0, 2,
@@ -146,7 +145,7 @@ raw_wait_for_command_output_test_cases = {
                     0, 6,
                 ]),
             ],
-            "output_packets": [
+            "outputPackets": [
                 [
                     bytes([
                         85, 85, 100, 73, 0, 1, 0, 6, 0, 212, 6, 1, 0, 18, 149, 48, 0, 0, 1,
@@ -205,7 +204,7 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_packets": [
+            "statusPackets": [
                 [
                     bytes([
                         85, 85, 44, 6, 0, 1, 0, 1, 0, 212, 4, 1, 0, 24, 248, 11, 0, 0, 0, 7,
@@ -225,36 +224,36 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_list": [
+            "statusList": [
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 212,
-                    "cmd_state": 124,
-                    "flow_status": 4,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 212,
+                    "cmdState": 124,
+                    "flowStatus": 4,
+                    "isStatus": True,
                 },
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 212,
-                    "cmd_state": 124,
-                    "flow_status": 9,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 212,
+                    "cmdState": 124,
+                    "flowStatus": 9,
+                    "isStatus": True,
                 },
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 212,
-                    "cmd_state": 124,
-                    "flow_status": 18,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 212,
+                    "cmdState": 124,
+                    "flowStatus": 18,
+                    "isStatus": True,
                 },
             ],
         },
@@ -262,15 +261,15 @@ raw_wait_for_command_output_test_cases = {
     "error": [
         {
             "name": "Invalid CRC",
-            "sequence_number": 16,
-            "expected_command_types": [12],
+            "sequenceNumber": 16,
+            "expectedCommandTypes": [12],
             "packets": [
                 bytes([
                     85, 85, 193, 89, 0, 1, 0, 1, 0, 16, 3, 1, 0, 17, 254, 6, 0, 0, 0, 2,
                     0, 1,
                 ]),
             ],
-            "output_packets": [
+            "outputPackets": [
                 [
                     bytes([
                         85, 85, 100, 192, 0, 1, 0, 1, 0, 16, 6, 1, 0, 18, 139, 24, 0, 0, 0,
@@ -279,21 +278,21 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_packets": [],
-            "status_list": [],
-            "error_instance": DeviceCommunicationError,
+            "statusPackets": [],
+            "statusList": [],
+            "errorInstance": DeviceCommunicationError,
         },
         {
             "name": "Invalid sequenceNumber",
-            "sequence_number": 215,
-            "expected_command_types": [12],
+            "sequenceNumber": 215,
+            "expectedCommandTypes": [12],
             "packets": [
                 bytes([
                     85, 85, 228, 33, 0, 1, 0, 1, 0, 215, 3, 1, 0, 17, 254, 6, 0, 0, 0, 2,
                     0, 1,
                 ]),
             ],
-            "output_packets": [
+            "outputPackets": [
                 [
                     bytes([
                         85, 85, 178, 91, 0, 1, 0, 1, 0, 200, 4, 1, 0, 18, 146, 11, 0, 0, 0,
@@ -301,21 +300,21 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_packets": [],
-            "status_list": [],
-            "error_instance": DeviceAppError,
+            "statusPackets": [],
+            "statusList": [],
+            "errorInstance": DeviceAppError,
         },
         {
             "name": "Invalid expected command type",
-            "sequence_number": 16,
-            "expected_command_types": [10],
+            "sequenceNumber": 16,
+            "expectedCommandTypes": [10],
             "packets": [
                 bytes([
                     85, 85, 193, 89, 0, 1, 0, 1, 0, 16, 3, 1, 0, 17, 254, 6, 0, 0, 0, 2,
                     0, 1,
                 ]),
             ],
-            "output_packets": [
+            "outputPackets": [
                 [
                     bytes([
                         85, 85, 68, 192, 0, 1, 0, 1, 0, 16, 6, 1, 0, 18, 139, 24, 0, 0, 0,
@@ -324,7 +323,7 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_packets": [
+            "statusPackets": [
                 [
                     bytes([
                         85, 85, 42, 232, 0, 1, 0, 1, 0, 16, 4, 1, 0, 24, 245, 11, 0, 0, 0,
@@ -344,39 +343,39 @@ raw_wait_for_command_output_test_cases = {
                     ]),
                 ],
             ],
-            "status_list": [
+            "statusList": [
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 16,
-                    "cmd_state": 12,
-                    "flow_status": 4,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 16,
+                    "cmdState": 12,
+                    "flowStatus": 4,
+                    "isStatus": True,
                 },
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 16,
-                    "cmd_state": 12,
-                    "flow_status": 5,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 16,
+                    "cmdState": 12,
+                    "flowStatus": 5,
+                    "isStatus": True,
                 },
                 {
-                    "device_state": "2",
-                    "device_idle_state": 2,
-                    "device_waiting_on": 0,
-                    "abort_disabled": True,
-                    "current_cmd_seq": 16,
-                    "cmd_state": 12,
-                    "flow_status": 6,
-                    "is_status": True,
+                    "deviceState": "2",
+                    "deviceIdleState": 2,
+                    "deviceWaitingOn": 0,
+                    "abortDisabled": True,
+                    "currentCmdSeq": 16,
+                    "cmdState": 12,
+                    "flowStatus": 6,
+                    "isStatus": True,
                 },
             ],
-            "error_instance": DeviceAppError,
+            "errorInstance": DeviceAppError,
         },
     ],
 }
