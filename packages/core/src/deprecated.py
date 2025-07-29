@@ -99,13 +99,17 @@ class DeprecatedCommunication:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
+        max_tries = params.get("maxTries")
+        if max_tries is None:
+            max_tries = 5
+
         return await raw_operations.send_command(
             connection=self.sdk.get_connection(),
             data=params["data"],
             command_type=params["commandType"],
             sequence_number=params["sequenceNumber"],
-            version=packet_version,
-            max_tries=params.get("maxTries"),
+            version=packet_version or PacketVersionMap.v3,
+            max_tries=max_tries,
             timeout=params.get("timeout"),
         )
 
@@ -130,10 +134,13 @@ class DeprecatedCommunication:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
+        if max_tries is None:
+            max_tries = 5
+
         return await raw_operations.get_command_output(
             connection=self.sdk.get_connection(),
             sequence_number=sequence_number,
-            version=packet_version,
+            version=packet_version or PacketVersionMap.v3,
             max_tries=max_tries,
             timeout=timeout,
         )
@@ -156,7 +163,7 @@ class DeprecatedCommunication:
 
         return await raw_operations.wait_for_command_output(
             connection=self.sdk.get_connection(),
-            version=packet_version,
+            version=packet_version or PacketVersionMap.v3,
             sequence_number=params["sequenceNumber"],
             expected_command_types=params["expectedCommandTypes"],
             on_status=params.get("onStatus"),
@@ -183,9 +190,12 @@ class DeprecatedCommunication:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
+        if max_tries is None:
+            max_tries = 5
+
         return await raw_operations.get_status(
             connection=self.sdk.get_connection(),
-            version=packet_version,
+            version=packet_version or PacketVersionMap.v3,
             max_tries=max_tries,
             timeout=timeout,
         )
@@ -211,9 +221,12 @@ class DeprecatedCommunication:
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
 
+        if max_tries is None:
+            max_tries = 2
+
         return await raw_operations.send_abort(
             connection=self.sdk.get_connection(),
-            version=packet_version,
+            version=packet_version or PacketVersionMap.v3,
             sequence_number=sequence_number,
             max_tries=max_tries,
             timeout=timeout,

@@ -16,7 +16,7 @@ raw_get_status_test_cases = {
             "ackPackets": [
                 bytes([
                     85, 85, 193, 143, 0, 1, 0, 1, 255, 255, 4, 1, 0, 18, 8, 11, 0, 0, 0,
-                    7, 35, 0, 0, 50, 7, 0, 132,
+                    4, 35, 0, 0, 50, 4, 0, 132,
                 ]),
             ],
             "status": {
@@ -25,7 +25,7 @@ raw_get_status_test_cases = {
                 "deviceWaitingOn": 2,
                 "abortDisabled": False,
                 "currentCmdSeq": 50,
-                "cmdState": 7,
+                "cmdState": 4,
                 "flowStatus": 132,
                 "isStatus": True,
             },
@@ -43,7 +43,7 @@ raw_get_status_test_cases = {
                 bytes([170, 1, 6, 0, 0, 0, 0, 0]),
                 bytes([
                     85, 85, 250, 109, 0, 1, 0, 1, 255, 255, 4, 1, 0, 18, 10, 11, 0, 0, 0,
-                    7, 3, 0, 15, 2, 1, 0, 164,
+                    4, 3, 0, 15, 2, 1, 0, 164,
                 ]),
             ],
             "status": {

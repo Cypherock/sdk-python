@@ -134,7 +134,7 @@ class SDK:
             data=data,
             applet_id=self.applet_id,
             sequence_number=sequence_number,
-            version=self.packet_version,
+            version= PacketVersionMap.v3,
             max_tries=max_tries,
             timeout=timeout,
         )
@@ -168,7 +168,7 @@ class SDK:
             connection=self.connection,
             applet_id=self.applet_id,
             sequence_number=sequence_number,
-            version=self.packet_version,
+            version = PacketVersionMap.v3,
             max_tries=max_tries,
             timeout=timeout,
         )
@@ -196,7 +196,7 @@ class SDK:
 
         return await operations.wait_for_result(
             connection=self.connection,
-            version=self.packet_version,
+            version=self.packet_version or PacketVersionMap.v3,
             applet_id=self.applet_id,
             sequence_number=sequence_number,
             on_status=on_status,
@@ -230,7 +230,7 @@ class SDK:
 
         return await operations.get_status(
             connection=self.connection,
-            version=self.packet_version,
+            version = PacketVersionMap.v3,
             max_tries=max_tries,
             timeout=timeout,
             dont_log=dont_log,
@@ -264,7 +264,7 @@ class SDK:
         return await operations.send_abort(
             connection=self.connection,
             sequence_number=sequence_number,
-            version=self.packet_version,
+            version= PacketVersionMap.v3,
             max_tries=max_tries,
             timeout=timeout,
         )
@@ -486,7 +486,7 @@ class SDK:
             if await self.is_supported():
                 await operations.wait_for_idle(
                     connection=self.connection,
-                    version=self.packet_version or PacketVersionMap.v3,
+                    version = PacketVersionMap.v3,
                 )
         except Exception as error:
             logger.warn("Error while checking for idle state")

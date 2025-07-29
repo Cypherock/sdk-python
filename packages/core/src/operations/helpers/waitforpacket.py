@@ -67,6 +67,9 @@ def wait_for_packet(
             )
 
         is_completed = False
+        success = False
+        error_result = None
+        result_packet = None
         timeout_task = None
         recheck_task = None
 
@@ -79,6 +82,7 @@ def wait_for_packet(
                 recheck_task.cancel()
 
         async def recheck_packet():
+            nonlocal success, error_result, result_packet
             while not is_completed:
                 try:
                     if not await connection.is_connected():
@@ -141,24 +145,25 @@ def wait_for_packet(
 
                             if error or is_success:
                                 break
+                        else:
+                            pass
 
                     if error or is_success:
-                        cleanup()
-
                         if error:
-                            raise error
-
-                        if not received_packet:
-                            raise Exception('Did not find receivedPacket')
-
-                        return received_packet
+                            error_result = error
+                        elif received_packet:
+                            success = True
+                            result_packet = received_packet
+                        cleanup()
+                        return result_packet if is_success else None
                     else:
                         await asyncio.sleep(usable_config.constants.RECHECK_TIME / 1000)
 
                 except Exception as error:
                     if hasattr(error, 'code') and error.code in [e.value for e in DeviceConnectionErrorType]:
+                        error_result = error
                         cleanup()
-                        raise error
+                        return
 
                     logger.error('Error while rechecking packet on `waitForPacket`')
                     logger.error(str(error))
@@ -176,8 +181,17 @@ def wait_for_packet(
 
             for task in pending:
                 task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
 
-            if timeout_task in done:
+            if success and result_packet:
+                return result_packet
+            elif error_result:
+                raise error_result
+            else:
+                # If not successful, then it timed out or had an error
                 cleanup()
                 if not await connection.is_connected():
                     raise DeviceConnectionError(
@@ -187,13 +201,9 @@ def wait_for_packet(
                     raise DeviceCommunicationError(
                         DeviceCommunicationErrorType.READ_TIMEOUT
                     )
-
-            if recheck_task in done:
-                return recheck_task.result()
-
-        except Exception as error:
+        except Exception as e:
             cleanup()
-            raise error
+            raise e
 
     task = asyncio.create_task(promise_func())
     return CancellableTask(task)
