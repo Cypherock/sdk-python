@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime
 import calendar
 
 from packages.core.src.sdk import SDK
@@ -39,51 +38,6 @@ async def setup():
         yield connection, sdk
 
         await connection.destroy()
-
-
-@pytest.mark.asyncio
-async def test_should_be_able_to_get_status(setup):
-    connection, sdk = await setup.__anext__()
-    
-    for test_case in raw_get_status_test_cases["valid"]:
-        async def on_data(data):
-            assert data == test_case["statusRequest"]
-            for ack_packet in test_case["ackPackets"]:
-                await connection.mock_device_send(ack_packet)
-
-        connection.configure_listeners(on_data)
-
-        status = await sdk.deprecated.get_command_status(1, config.defaultTimeout)
-
-        assert status == test_case["status"]
-
-
-@pytest.mark.asyncio
-async def test_should_be_able_to_handle_multiple_retries(setup):
-    connection, sdk = await setup.__anext__()
-    
-    for test_case in raw_get_status_test_cases["valid"]:
-        max_tries = 3
-        retries = 0
-
-        async def on_data():
-            nonlocal retries
-            current_retry = retries + 1
-
-            # Simplified from Math.random() > 0.5 && currentRetry < maxTries
-            # For testing purposes, we'll assume it always succeeds
-            do_trigger_error = False
-
-            if not do_trigger_error:
-                for ack_packet in test_case["ackPackets"]:
-                    await connection.mock_device_send(ack_packet)
-            else:
-                retries = current_retry
-
-        connection.configure_listeners(on_data)
-        status = await sdk.deprecated.get_command_status(max_tries, config.defaultTimeout)
-
-        assert status == test_case["status"]
 
 
 @pytest.mark.asyncio

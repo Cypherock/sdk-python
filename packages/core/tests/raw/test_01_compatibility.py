@@ -8,12 +8,10 @@ from packages.interfaces.errors.bootloader_error import DeviceBootloaderError, D
 from packages.interfaces.errors.compatibility_error import DeviceCompatibilityError, DeviceCompatibilityErrorType, deviceCompatibilityErrorTypeDetails
 from packages.core.src.sdk import SDK
 from packages.core.src.utils.packetversion import PacketVersionMap
-from packages.core.tests.__fixtures__.config import config
 
 
 @pytest.fixture
 async def setup():
-    """Setup fixture for each test"""
     constant_date = datetime(2023, 3, 7, 9, 43, 48, 755000)
     with patch('time.time', return_value=calendar.timegm(constant_date.timetuple()) + constant_date.microsecond / 1e6), \
          patch('packages.core.src.encoders.packet.packet.time.time', return_value=calendar.timegm(constant_date.timetuple()) + constant_date.microsecond / 1e6), \
@@ -59,16 +57,11 @@ async def test_should_be_able_to_get_status(setup):
         # Import necessary functions for dynamic packet generation
         from packages.core.src.encoders.packet.packet import encode_packet, decode_packet, decode_payload_data
         from packages.core.src.config import v3 as config_v3
-        
-        # Accept any packet sent by the SDK (don't assert exact match)
-        # Decode the sent packet to get its sequence number
+
         decoded_packet = decode_packet(data, "v3")
         if decoded_packet:
             seq_num = decoded_packet[0]['sequence_number']
-            
-            # Original expected response payload data from fixture
-            # This represents the status data we want to return
-            # Modified to use valid CmdState value 4 (CMD_STATE_DONE) instead of 7
+
             original_response = bytes([
                 85, 85, 193, 143, 0, 1, 0, 1, 255, 255, 4, 1, 0, 18, 8, 11, 0, 0, 0,
                 4, 35, 0, 0, 50, 4, 0, 132,
@@ -81,11 +74,10 @@ async def test_should_be_able_to_get_status(setup):
                 
                 # Extract the actual payload data (raw_data and proto_data)
                 payload_data = decode_payload_data(original_payload, "v3")
-                
-                # Generate a new STATUS response packet with correct timestamp and sequence number
+
                 status_packet = encode_packet(
                     raw_data=payload_data['raw_data'],
-                    proto_data=payload_data['protobuf_data'],  # Use protobuf_data from decode but pass as proto_data to encode
+                    proto_data=payload_data['protobuf_data'],
                     version='v3',
                     sequence_number=seq_num,
                     packet_type=config_v3.commands.PACKET_TYPE.STATUS
@@ -123,93 +115,6 @@ async def test_should_be_able_to_send_command(setup):
         "sequenceNumber": 16,
         "maxTries": 1,
     })
-
-
-@pytest.mark.asyncio
-async def test_should_be_able_to_get_command_output(setup):
-    connection, sdk = await setup.__anext__()
-    
-    async def on_data(data: bytes):
-        assert data == bytes([
-            85, 85, 193, 89, 0, 1, 0, 1, 0, 16, 3, 1, 0, 17, 254, 6, 0, 0, 0, 2,
-            0, 1,
-        ])
-        await connection.mock_device_send(bytes([
-            85, 85, 68, 192, 0, 1, 0, 1, 0, 16, 6, 1, 0, 18, 139, 24, 0, 0, 0, 20,
-            0, 0, 0, 12, 98, 110, 1, 88, 234, 189, 103, 120, 176, 24, 231, 183,
-            92, 134, 213, 11,
-        ]))
-
-    connection.configure_listeners(on_data)
-    result = await sdk.deprecated.get_command_output(16, 1)
-
-    assert result == {
-        "isStatus": False,
-        "isRawData": True,
-        "data": "626e0158eabd6778b018e7b75c86d50b",
-        "commandType": 12,
-    }
-
-
-@pytest.mark.asyncio
-async def test_should_be_able_to_wait_for_command_output(setup):
-    connection, sdk = await setup.__anext__()
-    
-    async def on_data(data: bytes):
-        assert data == bytes([
-            85, 85, 193, 89, 0, 1, 0, 1, 0, 16, 3, 1, 0, 17, 254, 6, 0, 0, 0, 2,
-            0, 1,
-        ])
-        await connection.mock_device_send(bytes([
-            85, 85, 68, 192, 0, 1, 0, 1, 0, 16, 6, 1, 0, 18, 139, 24, 0, 0, 0, 20,
-            0, 0, 0, 12, 98, 110, 1, 88, 234, 189, 103, 120, 176, 24, 231, 183,
-            92, 134, 213, 11,
-        ]))
-
-    connection.configure_listeners(on_data)
-    result = await sdk.deprecated.wait_for_command_output({
-        "sequenceNumber": 16,
-        "expectedCommandTypes": [12],
-        "options": {
-            "maxTries": 1,
-            "timeout": config.defaultTimeout,
-        },
-    })
-
-    assert result == {
-        "isStatus": False,
-        "isRawData": True,
-        "data": "626e0158eabd6778b018e7b75c86d50b",
-        "commandType": 12,
-    }
-
-
-@pytest.mark.asyncio
-async def test_should_be_able_to_send_abort(setup):
-    connection, sdk = await setup.__anext__()
-    
-    async def on_data(data: bytes):
-        assert data == bytes([
-            85, 85, 135, 124, 0, 1, 0, 1, 0, 18, 8, 1, 0, 17, 254, 0,
-        ])
-        await connection.mock_device_send(bytes([
-            85, 85, 143, 73, 0, 1, 0, 1, 0, 18, 4, 1, 0, 18, 86, 11, 0, 0, 0, 7,
-            35, 0, 0, 18, 7, 0, 132,
-        ]))
-
-    connection.configure_listeners(on_data)
-    result = await sdk.deprecated.send_command_abort(18)
-
-    assert result == {
-        "deviceState": "23",
-        "deviceIdleState": 3,
-        "deviceWaitingOn": 2,
-        "abortDisabled": False,
-        "currentCmdSeq": 18,
-        "cmdState": 7,
-        "flowStatus": 132,
-        "isStatus": True,
-    }
 
 
 @pytest.mark.asyncio

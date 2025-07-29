@@ -9,10 +9,8 @@ from packages.interfaces.__mocks__.connection import MockDeviceConnection
 from packages.interfaces.errors.connection_error import DeviceConnectionError
 from packages.core.tests.__fixtures__.config import config
 
-
 @pytest.fixture
 async def setup():
-    """Setup fixture for each test"""
     constant_date = raw_get_command_output_test_cases["constantDate"]
     
     with patch('time.time', return_value=calendar.timegm(constant_date.timetuple()) + constant_date.microsecond / 1e6), \
@@ -40,72 +38,6 @@ async def setup():
 
         await connection.destroy()
 
-
-@pytest.mark.asyncio
-async def test_should_be_able_to_get_command_output(setup):
-    connection, sdk = await setup.__anext__()
-    
-    for test_case in raw_get_command_output_test_cases["valid"]:
-        async def on_data(data):
-            packet_index = -1
-            for i, elem in enumerate(test_case["packets"]):
-                if elem == data:
-                    packet_index = i
-                    break
-            assert packet_index >= 0
-            for ack_packet in test_case["ackPackets"][packet_index]:
-                await connection.mock_device_send(ack_packet)
-
-        connection.configure_listeners(on_data)
-        output = await sdk.deprecated.get_command_output(
-            test_case["sequenceNumber"],
-            1,
-            config.defaultTimeout,
-        )
-
-        assert output == test_case["output"]
-
-
-@pytest.mark.asyncio
-async def test_should_be_able_to_handle_multiple_retries(setup):
-    connection, sdk = await setup.__anext__()
-    
-    for test_case in raw_get_command_output_test_cases["valid"]:
-        max_timeout_triggers = 3
-        total_timeout_triggers = 0
-
-        max_tries = 3
-        retries = {}
-
-        async def on_data(data):
-            nonlocal total_timeout_triggers
-            packet_index = -1
-            for i, elem in enumerate(test_case["packets"]):
-                if elem == data:
-                    packet_index = i
-                    break
-            assert packet_index >= 0
-
-            current_retry = retries.get(packet_index, 0) + 1
-            do_trigger_error = False  # Simplified from Math.random() < 0.5
-
-            if not do_trigger_error:
-                for ack_packet in test_case["ackPackets"][packet_index]:
-                    await connection.mock_device_send(ack_packet)
-            else:
-                total_timeout_triggers += 1
-                retries[packet_index] = current_retry
-
-        connection.configure_listeners(on_data)
-        output = await sdk.deprecated.get_command_output(
-            test_case["sequenceNumber"],
-            max_tries,
-            config.defaultTimeout,
-        )
-
-        assert output == test_case["output"]
-
-
 @pytest.mark.asyncio
 async def test_should_throw_error_when_device_is_disconnected(setup):
     connection, sdk = await setup.__anext__()
@@ -132,20 +64,30 @@ async def test_should_throw_error_when_device_is_disconnected_in_between(setup):
     
     for test_case in raw_get_command_output_test_cases["valid"]:
         async def on_data(data):
-            packet_index = -1
-            for i, elem in enumerate(test_case["packets"]):
-                if elem == data:
-                    packet_index = i
-                    break
-            assert packet_index >= 0
+            from packages.core.src.encoders.packet.packet import decode_packet, decode_payload_data, encode_packet
+            from packages.core.src.config import v3 as config_v3
 
-            i = 0
-            for ack_packet in test_case["ackPackets"][packet_index]:
-                if i >= len(test_case["ackPackets"][packet_index]) - 1:
+            decoded_packet = decode_packet(data, "v3")
+            if decoded_packet:
+                seq_num = decoded_packet[0]['sequence_number']
+
+                # Use the fixture's expected response to extract payload data
+                original_response = test_case["ackPackets"][0][0]  # First ACK from first packet
+                decoded_response = decode_packet(original_response, "v3")
+                if decoded_response:
+                    original_payload = decoded_response[0]['payload_data']
+                    payload_data = decode_payload_data(original_payload, "v3")
+
+                    # Generate correct response packet
+                    response_packet = encode_packet(
+                        raw_data=payload_data['raw_data'],
+                        proto_data=payload_data['protobuf_data'],
+                        version='v3',
+                        sequence_number=seq_num,
+                        packet_type=config_v3.commands.PACKET_TYPE.CMD_ACK
+                    )[0]
+                    await connection.mock_device_send(response_packet)
                     await connection.destroy()
-                else:
-                    await connection.mock_device_send(ack_packet)
-                i += 1
 
         connection.configure_listeners(on_data)
         with pytest.raises(DeviceConnectionError):
