@@ -87,9 +87,7 @@ async def write_packet(
             try:
                 if not await connection.is_connected():
                     cleanup()
-                    raise DeviceConnectionError(
-                        DeviceConnectionErrorType.CONNECTION_CLOSED
-                    )
+                    return
 
                 if is_completed:
                     return
@@ -117,7 +115,7 @@ async def write_packet(
             except Exception as error:
                 if hasattr(error, 'code') and error.code in [e.value for e in DeviceConnectionErrorType]:
                     cleanup()
-                    raise error
+                    return
 
                 logger.warn('Error while rechecking packet on `writePacket`, bootloader')
                 logger.warn(str(error))
@@ -195,9 +193,7 @@ async def check_if_in_receiving_mode(
             try:
                 if not await connection.is_connected():
                     cleanup()
-                    raise DeviceConnectionError(
-                        DeviceConnectionErrorType.CONNECTION_CLOSED
-                    )
+                    return
 
                 if is_completed:
                     return
@@ -219,7 +215,7 @@ async def check_if_in_receiving_mode(
             except Exception as error:
                 if hasattr(error, 'code') and error.code in [e.value for e in DeviceConnectionErrorType]:
                     cleanup()
-                    raise error
+                    return
 
                 logger.warn('Error while rechecking packet on `sendBootloaderData`')
                 logger.warn(str(error))

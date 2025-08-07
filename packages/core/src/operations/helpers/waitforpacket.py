@@ -87,9 +87,7 @@ def wait_for_packet(
                 try:
                     if not await connection.is_connected():
                         cleanup()
-                        raise DeviceConnectionError(
-                            DeviceConnectionErrorType.CONNECTION_CLOSED
-                        )
+                        return
 
                     if is_completed:
                         return

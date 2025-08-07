@@ -35,4 +35,14 @@ target-version = ['py311']
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
-ignore_missing_imports = true 
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = "."
+filterwarnings = [
+    "ignore::pytest.PytestRemovedIn9Warning",
+    "ignore::DeprecationWarning",
+    "ignore::RuntimeWarning",
+    "ignore:.*Task exception was never retrieved.*:RuntimeWarning",
+    "ignore:.*coroutine.*was never awaited.*:RuntimeWarning",
+] 

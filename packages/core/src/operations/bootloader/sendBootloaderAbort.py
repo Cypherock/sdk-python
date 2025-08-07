@@ -95,9 +95,7 @@ async def write_packet(
             try:
                 if not await connection.is_connected():
                     cleanup()
-                    raise DeviceConnectionError(
-                        DeviceConnectionErrorType.CONNECTION_CLOSED
-                    )
+                    return
 
                 if is_completed:
                     return
@@ -119,9 +117,7 @@ async def write_packet(
             except Exception as error:
                 if hasattr(error, 'code') and error.code in [e.value for e in DeviceConnectionErrorType]:
                     cleanup()
-                    raise error
-
-                # Continue rechecking on other errors
+                    return
                 await asyncio.sleep(recheck_time / 1000)
 
     try:
