@@ -21,7 +21,7 @@ class IDevice(TypedDict):
 
 class PoolData(TypedDict):
     id: str
-    data: bytearray
+    data: bytes
 
 @runtime_checkable
 class IDeviceConnection(Protocol):
@@ -46,10 +46,10 @@ class IDeviceConnection(Protocol):
     async def get_device_state(self) -> DeviceState:
         ...
 
-    async def send(self, data: bytearray) -> None:
+    async def send(self, data: bytes) -> None:
         ...
 
-    async def receive(self) -> Optional[bytearray]:
+    async def receive(self) -> Optional[bytes]:
         ...
 
     async def peek(self) -> List[PoolData]:
