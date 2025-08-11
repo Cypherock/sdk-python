@@ -12,7 +12,7 @@ from packages.util.utils import (
 
 from packages.app_manager.src.constants.appId import APP_VERSION
 from packages.app_manager.src.proto.generated.types import AuthCardStatus
-# from packages.app_manager.src.services.card_auth import card_auth_service
+from packages.app_manager.src.services import card_auth as card_auth_service
 from packages.app_manager.src.utils import (
     assert_or_throw_invalid_result,
     logger as root_logger,
