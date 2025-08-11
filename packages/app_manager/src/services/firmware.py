@@ -55,3 +55,4 @@ async def get_latest(params: Optional[GetLatestFirmwareOptions] = None) -> Lates
         result.firmware = await download_file(response["data"]["firmware"]["downloadUrl"])
     
     return result
+

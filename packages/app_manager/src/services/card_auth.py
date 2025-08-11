@@ -41,3 +41,4 @@ async def verify_card_challenge_signature(params: Dict[str, Any]) -> Dict[str, A
         **params,
         "firmwareVersion": "0.0.0"
     })
+

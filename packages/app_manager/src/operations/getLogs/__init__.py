@@ -77,3 +77,4 @@ async def get_logs(
 
     logger.info('Completed')
     return ''.join(all_logs)
+
