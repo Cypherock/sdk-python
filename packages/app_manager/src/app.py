@@ -36,6 +36,9 @@ class ManagerApp:
     async def get_wallets(self):
         return await self._sdk.run_operation(lambda: operations.get_wallets(self._sdk))
 
+    async def get_logs(self, on_event: operations.GetLogsEventHandler = None):
+        return await self._sdk.run_operation(lambda: operations.get_logs(self._sdk, on_event))
+
     async def select_wallet(self):
         return await self._sdk.run_operation(lambda: operations.select_wallet(self._sdk))
 

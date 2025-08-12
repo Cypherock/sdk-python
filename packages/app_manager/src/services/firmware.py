@@ -56,3 +56,5 @@ async def get_latest(params: Optional[GetLatestFirmwareOptions] = None) -> Lates
     
     return result
 
+
+
