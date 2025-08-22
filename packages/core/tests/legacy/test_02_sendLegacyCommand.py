@@ -11,7 +11,6 @@ from packages.core.src.sdk import SDK
 from packages.core.tests.__fixtures__.config import config
 from packages.core.tests.legacy.__fixtures__.sendLegacyCommand import legacy_send_command_test_cases
 
-
 class TestSendLegacyCommand:
     @pytest.fixture
     async def setup(self):

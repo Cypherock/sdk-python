@@ -6,19 +6,47 @@ This project implements a Bitcoin Hardware Wallet Interface (HWI) for the Cypher
 
 ```
 packages/
-├── hw_webusb/
-├── hw_hid/
-├── hw_serialport/
-├── interfaces/
-└── util/
+├── core/              # Core SDK functionality
+├── app_manager/       # App manager SDK
+├── hw_webusb/         # WebUSB hardware connector
+├── hw_hid/           # HID hardware connector
+├── hw_serialport/    # Serial port hardware connector
+├── interfaces/       # Common interfaces and types
+└── util/            # Utility functions
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.11 or higher
+#### System Requirements
+- Python 3.13
 - Poetry (for dependency management)
+
+#### Protocol Buffers Compiler
+Install the Protocol Buffers compiler for your system:
+
+**macOS:**
+```bash
+brew install protobuf
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get install protobuf-compiler
+```
+
+**Windows:**
+Download from [protobuf releases](https://github.com/protocolbuffers/protobuf/releases) or use:
+```bash
+choco install protoc
+```
+
+#### Repository Setup
+Initialize the submodules to get the proto files:
+```bash
+git submodule update --init --recursive
+```
 
 ### Installation
 
@@ -50,6 +78,102 @@ packages/
    poetry install
    ```
 
+#### Quick Setup Script
+
+For convenience, you can run the complete setup process with:
+
+```bash
+# Clone and setup everything
+git clone https://github.com/Cypherock/sdk-python.git
+cd sdk-python
+git submodule update --init --recursive
+poetry install
+
+# Run prebuild for all packages
+cd packages/core && chmod +x scripts/prebuild.sh && ./scripts/prebuild.sh
+cd packages/app_manager && chmod +x scripts/prebuild.sh && ./scripts/prebuild.sh
+```
+
+**Or use the Makefile convenience targets:**
+
+```bash
+# Complete setup (install dependencies + prebuild)
+make setup
+
+# Run prebuild only
+make prebuild
+
+# See all available targets
+make help
+```
+
+### Prebuild Process
+
+The SDK uses Protocol Buffers for communication with the Cypherock X1 device. Before using the SDK, you need to generate the Python code from the `.proto` files.
+
+#### When to Run Prebuild
+
+Run the prebuild process in these scenarios:
+- After cloning the repository for the first time
+- After pulling changes that include updates to `.proto` files
+- Before committing generated files
+- When setting up a new development environment
+
+#### Running Prebuild
+
+**For all packages:**
+```bash
+# From the root directory
+poetry run python -m packages.core.scripts.prebuild
+poetry run python -m packages.app_manager.scripts.prebuild
+```
+
+**For individual packages:**
+
+**Core package:**
+```bash
+cd packages/core
+chmod +x scripts/prebuild.sh
+./scripts/prebuild.sh
+```
+
+**App Manager package:**
+```bash
+cd packages/app_manager
+chmod +x scripts/prebuild.sh
+./scripts/prebuild.sh
+```
+
+#### What Prebuild Does
+
+The prebuild process:
+1. Reads `.proto` files from the `submodules/common/proto/` directory
+2. Generates Python dataclasses using `betterproto` (equivalent to TypeScript's protoc + ts-proto)
+3. Creates type-safe Python code for device communication
+4. Places generated files in:
+   - `packages/core/src/encoders/proto/generated/` (for core package)
+   - `packages/app_manager/src/proto/generated/` (for app manager package)
+
+#### Troubleshooting
+
+If you encounter issues with the prebuild process:
+
+1. **Ensure protobuf compiler is installed:**
+   ```bash
+   protoc --version
+   ```
+
+2. **Check submodules are initialized:**
+   ```bash
+   git submodule status
+   ```
+
+3. **Regenerate lock files if needed:**
+   ```bash
+   poetry lock --no-update
+   poetry install
+   ```
+
 ## Development
 
 ### Linting and Formatting
@@ -61,6 +185,13 @@ To run linting and formatting checks:
 ```bash
 poetry run ruff check .
 poetry run black .
+```
+
+**Or use Makefile targets:**
+
+```bash
+make lint    # Run linting
+make format  # Format code
 ```
 
 ### Static Type Checking
@@ -83,6 +214,12 @@ To run all tests:
 poetry run pytest
 ```
 
+**Or use Makefile target:**
+
+```bash
+make test  # Run all tests
+```
+
 To run tests for a specific package, navigate to its directory and run `poetry run pytest`.
 
 ## Build Tools
@@ -97,11 +234,6 @@ This will generate distributable archives (`.whl` and `.tar.gz`) in the `dist/` 
 
 ## Contributing
 
-To be Added.
-
-## License
-
-To be Added.
-
+Please consider making a contribution to the project. Contributions can include bug fixes, feature proposal, or optimizations to the current code.
 
 

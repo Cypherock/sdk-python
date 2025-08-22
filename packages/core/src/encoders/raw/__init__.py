@@ -5,8 +5,8 @@ from packages.interfaces.errors import (
 from packages.util.utils.crypto import int_to_uint_byte, is_hex
 from packages.util.utils.assert_utils import assert_condition
 
-from ...config import v3 as config
-from ...utils.packetversion import PacketVersion, PacketVersionMap
+from packages.core.src.config import v3 as config
+from packages.core.src.utils.packetversion import PacketVersion, PacketVersionMap
 from .types import RawData, StatusData, DeviceIdleState, DeviceWaitOn, CmdState
 
 # Export types

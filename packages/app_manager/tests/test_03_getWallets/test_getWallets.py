@@ -4,6 +4,7 @@ from packages.interfaces.__mocks__.connection import MockDeviceConnection
 from packages.app_manager.tests.test_03_getWallets.__helpers__ import clear_mocks, expect_mock_calls, setup_mocks
 from packages.app_manager.tests.test_03_getWallets.__fixtures__ import fixtures
 from packages.app_manager.src import ManagerApp
+from packages.app_manager.src.__mocks__ import sdk as sdk_mocks
 
 
 @pytest.fixture
@@ -14,6 +15,7 @@ async def connection():
 
 
 @pytest.mark.asyncio
+@patch('packages.core.src.sdk.SDK.create', sdk_mocks.create)
 class TestManagerAppGetWallets:
     @pytest.mark.parametrize("test_case", fixtures['valid'])
     async def test_should_be_able_to_get_wallets(self, connection, test_case):

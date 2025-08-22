@@ -20,7 +20,7 @@ class TestManagerAppGetLogs:
         mock_sdk.run_operation = AsyncMock(return_value=test_case['output'])
         mock_sdk.destroy = AsyncMock()
         
-        with patch('packages.app_manager.src.app.core_sdk.SDK.create', return_value=mock_sdk):
+        with patch('packages.core.src.sdk.SDK.create', return_value=mock_sdk):
             manager_app = await ManagerApp.create(connection)
             
             on_event = AsyncMock()
@@ -38,7 +38,7 @@ class TestManagerAppGetLogs:
         mock_sdk.run_operation = AsyncMock(side_effect=error_instance)
         mock_sdk.destroy = AsyncMock()
         
-        with patch('packages.app_manager.src.app.core_sdk.SDK.create', return_value=mock_sdk):
+        with patch('packages.core.src.sdk.SDK.create', return_value=mock_sdk):
             manager_app = await ManagerApp.create(connection)
             
             with pytest.raises(error_class):
@@ -54,7 +54,7 @@ class TestManagerAppGetLogs:
         mock_sdk.run_operation = AsyncMock(side_effect=error_instance)
         mock_sdk.destroy = AsyncMock()
         
-        with patch('packages.app_manager.src.app.core_sdk.SDK.create', return_value=mock_sdk):
+        with patch('packages.core.src.sdk.SDK.create', return_value=mock_sdk):
             manager_app = await ManagerApp.create(connection)
             
             with pytest.raises(error_class) as exc_info:

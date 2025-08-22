@@ -4,6 +4,7 @@ import pytest
 from packages.interfaces.errors.bootloader_error import DeviceBootloaderErrorType, deviceBootloaderErrorTypeDetails
 from packages.interfaces.errors.compatibility_error import DeviceCompatibilityErrorType, deviceCompatibilityErrorTypeDetails
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
+from packages.interfaces.connection import DeviceState
 
 from packages.core.src.sdk import SDK
 from packages.core.src.utils.packetversion import PacketVersionMap
@@ -26,7 +27,29 @@ class TestLegacyDeviceOperationV1:
 
         connection.configure_listeners(on_data)
 
-        sdk = await SDK.create(connection, 0)  # appletId = 0
+        sdk = await SDK.create(connection, 0)
+
+        if not hasattr(sdk, 'deprecated') or sdk.deprecated is None:
+            from packages.core.src.deprecated import DeprecatedCommunication
+            sdk.deprecated = DeprecatedCommunication(sdk)
+
+        sdk.get_version = lambda: "0.1.16"
+        sdk.get_packet_version = lambda: PacketVersionMap.v1
+        sdk.get_connection = lambda: connection
+        sdk.get_device_state = lambda: DeviceState.MAIN
+        sdk.is_in_bootloader = lambda: False
+        
+        # Patch async methods
+        async def async_get_device_state():
+            return DeviceState.MAIN
+        
+        async def async_is_in_bootloader():
+            return False
+        
+        sdk.get_device_state = async_get_device_state
+        sdk.is_in_bootloader = async_is_in_bootloader
+        
+        # Ensure connection is properly initialized
         await connection.before_operation()
         connection.remove_listeners()
 

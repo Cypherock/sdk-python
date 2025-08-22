@@ -1,7 +1,7 @@
 from packages.core.src.types import ISDK
 from packages.util.utils import create_logger_with_prefix, create_status_listener
 from packages.app_manager.src.constants.appId import APP_VERSION
-from packages.app_manager.src.proto.generated.types import ITrainCardResult, TrainCardStatus
+from packages.app_manager.src.proto.generated.manager import TrainCardResult, TrainCardStatus
 from packages.app_manager.src.utils import assert_or_throw_invalid_result, OperationHelper
 from packages.app_manager.src.utils import logger as rootlogger
 from .types import ITrainCardParams, TrainCardEventHandler
@@ -15,7 +15,7 @@ logger = create_logger_with_prefix(rootlogger, 'TrainCard')
 async def train_card(
     sdk: ISDK,
     params: ITrainCardParams,
-) -> ITrainCardResult:
+) -> TrainCardResult:
     logger.info('Started')
 
     await sdk.check_app_compatibility(APP_VERSION)

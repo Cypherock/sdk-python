@@ -4,17 +4,17 @@ from packages.interfaces.errors import (
     DeviceCompatibilityErrorType,
 )
 from packages.interfaces.errors.app_error import DeviceAppError,DeviceAppErrorType
-from packages.app_manager.src.proto.generated.types import IVersion
+from packages.core.src.encoders.proto.generated.common import Version
 
 
-def create_version_hex(version: IVersion) -> str:
+def create_version_hex(version: Version) -> str:
     hex_str = f"{version.major:02x}"
     hex_str += f"{version.minor:02x}"
     hex_str += f"{version.patch:04x}"
     return hex_str
 
 
-async def handle_legacy_device(sdk: ISDK, version: IVersion) -> None:
+async def handle_legacy_device(sdk: ISDK, version: Version) -> None:
     is_confirmed = False
     firmware_version_hex = create_version_hex(version)
 

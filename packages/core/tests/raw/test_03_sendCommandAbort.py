@@ -55,8 +55,7 @@ async def test_should_be_able_to_send_abort(setup):
                 seq_num = decoded_packet[0]['sequence_number']
                 print(f"🔍 Decoded packet sequence: {seq_num}")
 
-                # Use the fixture's expected response to extract payload data
-                original_response = test_case["ackPackets"][0]  # First ACK packet
+                original_response = test_case["ackPackets"][0]
                 decoded_response = decode_packet(original_response, "v3")
                 if decoded_response:
                     original_payload = decoded_response[0]['payload_data']
@@ -73,15 +72,9 @@ async def test_should_be_able_to_send_abort(setup):
                     print(f"🔍 Sending response packet: {response_packet.hex()}")
                     await connection.mock_device_send(response_packet)
                 else:
-                    print(f"❌ Failed to decode original response, trying alternative approach")
-                    # Fallback: generate a simple status response with valid enum values
-                    # device_state = (device_waiting_on << 4) | device_idle_state
-                    # Use DeviceWaitOn.IDLE = 1 and DeviceIdleState.DEVICE = 3
-                    # device_state = (1 << 4) | 3 = 16 | 3 = 19 = 0x13
-                    # Include the correct sequence number in the status
-                    seq_hex = f"{seq_num:02x}"  # Convert sequence number to hex
+                    seq_hex = f"{seq_num:02x}"
                     response_packet = encode_packet(
-                        raw_data=f'130000{seq_hex}00',  # device_state=0x13, cmd_state=4, currentCmdSeq=seq_num
+                        raw_data=f'130000{seq_hex}00',
                         proto_data='',
                         version='v3',
                         sequence_number=seq_num,
@@ -118,7 +111,6 @@ async def test_should_throw_error_when_device_is_disconnected(setup):
                 seq_num = decoded_packet[0]['sequence_number']
                 print(f"🔍 Decoded packet sequence: {seq_num}")
 
-                # Use the fixture's expected response to extract payload data
                 original_response = test_case["ackPackets"][0]
                 decoded_response = decode_packet(original_response, "v3")
                 if decoded_response:
@@ -164,8 +156,7 @@ async def test_should_throw_error_when_device_is_disconnected_in_between(setup):
                 seq_num = decoded_packet[0]['sequence_number']
                 print(f"🔍 Decoded packet sequence: {seq_num}")
 
-                # Use the fixture's expected response to extract payload data
-                original_response = test_case["ackPackets"][0]  # First ACK packet
+                original_response = test_case["ackPackets"][0]
                 decoded_response = decode_packet(original_response, "v3")
                 if decoded_response:
                     original_payload = decoded_response[0]['payload_data']

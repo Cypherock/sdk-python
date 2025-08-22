@@ -2,7 +2,8 @@ from typing import Optional
 from packages.core.src.types import ISDK
 from packages.util.utils import create_logger_with_prefix, create_status_listener, string_to_version, uint8array_to_hex
 from packages.app_manager.src.constants.appId import APP_VERSION
-from packages.app_manager.src.proto.generated.types import IFirmwareUpdateErrorResponse, FirmwareUpdateError, UpdateFirmwareStatus
+from packages.app_manager.src.proto.generated.manager import FirmwareUpdateErrorResponse, FirmwareUpdateError
+from packages.app_manager.src.proto.types import UpdateFirmwareStatus
 from packages.app_manager.src.services import firmware_service
 from packages.app_manager.src.utils import assert_or_throw_invalid_result, OperationHelper
 from packages.app_manager.src.utils import logger as rootlogger
@@ -16,7 +17,7 @@ __all__ = ['update_firmware', 'IUpdateFirmwareParams', 'UpdateFirmwareEventHandl
 logger = create_logger_with_prefix(rootlogger, 'UpdateFirmware')
 
 
-async def parse_firmware_update_error(error: Optional[IFirmwareUpdateErrorResponse]) -> None:
+async def parse_firmware_update_error(error: Optional[FirmwareUpdateErrorResponse]) -> None:
     if not error:
         return
 

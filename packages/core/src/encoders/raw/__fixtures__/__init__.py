@@ -1,32 +1,32 @@
-from ....utils.packetversion import PacketVersionMap
+from packages.core.src.utils.packetversion import PacketVersionMap
 
 # Raw data test cases for valid encodings
 raw_data_test_cases = {
     "valid_encodings": [
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": "",
-                "is_raw_data": True,
-                "is_status": False,
+                "isRawData": True,
+                "isStatus": False,
             },
             "encoded": "00000001",
         },
         {
             "raw_data": {
-                "command_type": 53,
+                "commandType": 53,
                 "data": "3b986b12c84e96ee4d20e8dd9835b14b1767c09dd3eb24c203c1",
-                "is_raw_data": True,
-                "is_status": False,
+                "isRawData": True,
+                "isStatus": False,
             },
             "encoded": "000000353b986b12c84e96ee4d20e8dd9835b14b1767c09dd3eb24c203c1",
         },
         {
             "raw_data": {
-                "command_type": 213,
+                "commandType": 213,
                 "data": "d70a9bb4b65fd5b0b838a26092cd3886816c1586a7d8fb6e177b83258a39bb86714775390f5a4ba4d428fecc9ecfb65f5c08cd07ee9a3bc95f1ae7d72526a3c65debf711b9c5ccf380a69e7086bfa77a6c378fed71639888f2610fb44f5ee45ea207862e01578d629ac3cb4efb2a262c78c4d65d1c3578b97514789618d84beef1c2bd34396d7c5b6eb42bb054cee9d78da362cdaf43b5d7a9e799889733e596f2ef",
-                "is_raw_data": True,
-                "is_status": False,
+                "isRawData": True,
+                "isStatus": False,
             },
             "encoded": "000000d5d70a9bb4b65fd5b0b838a26092cd3886816c1586a7d8fb6e177b83258a39bb86714775390f5a4ba4d428fecc9ecfb65f5c08cd07ee9a3bc95f1ae7d72526a3c65debf711b9c5ccf380a69e7086bfa77a6c378fed71639888f2610fb44f5ee45ea207862e01578d629ac3cb4efb2a262c78c4d65d1c3578b97514789618d84beef1c2bd34396d7c5b6eb42bb054cee9d78da362cdaf43b5d7a9e799889733e596f2ef",
         },
@@ -38,21 +38,21 @@ encode_raw_data_test_cases = {
     "invalid": [
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": "",
             },
             "version": PacketVersionMap.v1,
         },
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": "",
             },
             "version": PacketVersionMap.v2,
         },
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": "",
             },
             "version": "invalid",
@@ -63,7 +63,7 @@ encode_raw_data_test_cases = {
         },
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": "",
             },
             "version": None,
@@ -74,49 +74,49 @@ encode_raw_data_test_cases = {
         },
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": "",
             },
             "version": None,
         },
         {
             "raw_data": {
-                "command_type": None,
+                "commandType": None,
                 "data": "",
             },
             "version": PacketVersionMap.v3,
         },
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": None,
             },
             "version": PacketVersionMap.v3,
         },
         {
             "raw_data": {
-                "command_type": None,
+                "commandType": None,
                 "data": "",
             },
             "version": PacketVersionMap.v3,
         },
         {
             "raw_data": {
-                "command_type": 1,
+                "commandType": 1,
                 "data": None,
             },
             "version": PacketVersionMap.v3,
         },
         {
             "raw_data": {
-                "command_type": -1,
+                "commandType": -1,
                 "data": "",
             },
             "version": PacketVersionMap.v3,
         },
         {
             "raw_data": {
-                "command_type": 9999999999,
+                "commandType": 9999999999,
                 "data": "",
             },
             "version": PacketVersionMap.v3,
@@ -172,53 +172,53 @@ decode_status_test_cases = {
         {
             "encoded": "",
             "status": {
-                "device_state": "0",
-                "device_idle_state": 0,
-                "device_waiting_on": 0,
-                "abort_disabled": False,
-                "current_cmd_seq": 0,
-                "cmd_state": 0,
-                "flow_status": 0,
-                "is_status": True,
+                "deviceState": "0",
+                "deviceIdleState": 0,
+                "deviceWaitingOn": 0,
+                "abortDisabled": False,
+                "currentCmdSeq": 0,
+                "cmdState": 0,
+                "flowStatus": 0,
+                "isStatus": True,
             },
         },
         {
             "encoded": "01010002010004",
             "status": {
-                "device_state": "1",
-                "device_idle_state": 1,
-                "device_waiting_on": 0,
-                "abort_disabled": True,
-                "current_cmd_seq": 2,
-                "cmd_state": 1,
-                "flow_status": 4,
-                "is_status": True,
+                "deviceState": "1",
+                "deviceIdleState": 1,
+                "deviceWaitingOn": 0,
+                "abortDisabled": True,
+                "currentCmdSeq": 2,
+                "cmdState": 1,
+                "flowStatus": 4,
+                "isStatus": True,
             },
         },
         {
             "encoded": "03000f020100a4",
             "status": {
-                "device_state": "3",
-                "device_idle_state": 3,
-                "device_waiting_on": 0,
-                "abort_disabled": False,
-                "current_cmd_seq": 3842,
-                "cmd_state": 1,
-                "flow_status": 164,
-                "is_status": True,
+                "deviceState": "3",
+                "deviceIdleState": 3,
+                "deviceWaitingOn": 0,
+                "abortDisabled": False,
+                "currentCmdSeq": 3842,
+                "cmdState": 1,
+                "flowStatus": 164,
+                "isStatus": True,
             },
         },
         {
             "encoded": "23000032070084",
             "status": {
-                "device_state": "23",
-                "device_idle_state": 3,
-                "device_waiting_on": 2,
-                "abort_disabled": False,
-                "current_cmd_seq": 50,
-                "cmd_state": 7,
-                "flow_status": 132,
-                "is_status": True,
+                "deviceState": "23",
+                "deviceIdleState": 3,
+                "deviceWaitingOn": 2,
+                "abortDisabled": False,
+                "currentCmdSeq": 50,
+                "cmdState": 7,
+                "flowStatus": 132,
+                "isStatus": True,
             },
         },
     ],

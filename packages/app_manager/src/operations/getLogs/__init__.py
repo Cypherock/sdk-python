@@ -2,7 +2,7 @@ from typing import Optional
 from packages.core.src.types import ISDK
 from packages.util.utils import create_logger_with_prefix, create_status_listener
 from packages.app_manager.src.constants.appId import APP_VERSION
-from packages.app_manager.src.proto.generated.types import GetLogsStatus, IGetLogsErrorResponse
+from packages.app_manager.src.proto.generated.manager import GetLogsStatus, GetLogsErrorResponse
 from packages.app_manager.src.utils import assert_or_throw_invalid_result, OperationHelper
 from packages.app_manager.src.utils import logger as rootlogger
 from .types import GetLogsError, GetLogsErrorType, GetLogsEventHandler
@@ -12,7 +12,7 @@ __all__ = ['get_logs', 'GetLogsError', 'GetLogsErrorType', 'GetLogsEventHandler'
 logger = create_logger_with_prefix(rootlogger, 'GetLogs')
 
 
-def parse_get_logs_error(error: Optional[IGetLogsErrorResponse]) -> None:
+def parse_get_logs_error(error: Optional[GetLogsErrorResponse]) -> None:
     if error is None:
         return
 

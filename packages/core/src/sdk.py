@@ -23,7 +23,7 @@ from packages.core.src.deprecated import DeprecatedCommunication
 from packages.core.src.encoders.proto.types import DeviceIdleState
 from packages.core.src.encoders.raw.types import DeviceIdleState as RawDeviceIdleState
 from packages.core.src.utils.logger import logger
-from packages.core.src.encoders.proto.generated.types import IAppVersionResultResponse
+from packages.core.src.encoders.proto.generated.core import AppVersionResultResponse
 from packages.interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
 
 
@@ -40,7 +40,7 @@ class SDK:
         self.packet_version = packet_version
         self.applet_id = applet_id
         self.deprecated = DeprecatedCommunication(self)
-        self.app_versions_map: Optional[IAppVersionResultResponse] = None
+        self.app_versions_map: Optional[AppVersionResultResponse] = None
 
     @classmethod
     async def create(
@@ -48,7 +48,7 @@ class SDK:
         connection: IDeviceConnection,
         applet_id: int,
         options: Optional[Dict[str, Any]] = None,
-    ) -> "SDK":
+    ) -> "ISDK":
         max_tries = options.get("max_tries") if options else None
         timeout = options.get("timeout") if options else None
         

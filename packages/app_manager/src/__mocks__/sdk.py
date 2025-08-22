@@ -47,7 +47,17 @@ mock_sdk_instance.get_device_state = get_device_state
 # Create function that returns the mock SDK instance
 create = AsyncMock(return_value=mock_sdk_instance)
 
-# Mock the SDK module
-from packages.core.src import sdk
-sdk.SDK.create = create
+__all__ = [
+    'create',
+    'mock_sdk_instance',
+    'get_status',
+    'send_abort', 
+    'get_result',
+    'send_query',
+    'check_app_compatibility',
+    'wait_for_result',
+    'run_operation',
+    'destroy',
+    'get_device_state'
+]
 
