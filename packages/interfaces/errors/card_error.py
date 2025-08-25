@@ -1,5 +1,5 @@
 from enum import Enum
-from ...core.src.encoders.proto.generated.types import CardError
+from packages.core.src.encoders.proto.generated.types import CardError
 from .sub_error import SubErrorToMap, SubErrorDetail
 
 
@@ -103,8 +103,4 @@ cardErrorTypeDetails[CardError.CARD_ERROR_SW_INS_BLOCKED] = SubErrorDetail(
 cardErrorTypeDetails[CardError.CARD_ERROR_SW_OUT_OF_BOUNDARY] = SubErrorDetail(
     CardAppErrorType.SW_OUT_OF_BOUNDARY.value,
     "Operation failed on card (Out of boundary)"
-)
-cardErrorTypeDetails[CardError.UNRECOGNIZED] = SubErrorDetail(
-    CardAppErrorType.UNRECOGNIZED.value,
-    "Card operation failed with unrecognized error"
 )

@@ -10,11 +10,29 @@ from packages.core.src.sdk import SDK
 class TestBootloaderOperation:
     @pytest.fixture
     async def setup(self):
-        """Setup fixture for each test"""
         connection = await MockDeviceConnection.create()
         connection.configure_device(DeviceState.BOOTLOADER, "MOCK")
 
-        sdk = await SDK.create(connection, 0)  # appletId = 0
+        sdk = await SDK.create(connection, 0)
+
+        if not hasattr(sdk, 'deprecated') or sdk.deprecated is None:
+            from packages.core.src.deprecated import DeprecatedCommunication
+            sdk.deprecated = DeprecatedCommunication(sdk)
+
+        sdk.get_version = lambda: "0.0.0"
+        sdk.get_packet_version = lambda: None
+        sdk.get_connection = lambda: connection
+        sdk.get_device_state = lambda: DeviceState.BOOTLOADER
+        sdk.is_in_bootloader = lambda: True
+
+        async def async_get_device_state():
+            return DeviceState.BOOTLOADER
+        
+        async def async_is_in_bootloader():
+            return True
+        
+        sdk.get_device_state = async_get_device_state
+        sdk.is_in_bootloader = async_is_in_bootloader
         await connection.before_operation()
         connection.remove_listeners()
 

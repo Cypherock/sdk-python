@@ -2,7 +2,8 @@ from typing import Protocol, TypedDict, List, Optional, Callable, Awaitable, Uni
 from packages.interfaces import DeviceState, IDeviceConnection
 from packages.core.src.utils.packetversion import PacketVersion
 from packages.core.src.encoders.raw.types import RawData, StatusData
-from packages.core.src.encoders.proto.generated.types import IAppVersionResultResponse, IVersion
+from packages.core.src.encoders.proto.generated.core import AppVersionResultResponse
+from packages.core.src.encoders.proto.generated.common import Version
 
 
 class IDeprecatedCommunication(Protocol):
@@ -139,10 +140,10 @@ class ISDK(Protocol):
         self,
         on_status: Optional[Callable[[Any], None]] = None,
         options: Optional[Dict[str, Any]] = None,
-    ) -> IAppVersionResultResponse:
+    ) -> AppVersionResultResponse:
         ...
     
-    async def get_app_version(self, app_id: int) -> Optional[IVersion]:
+    async def get_app_version(self, app_id: int) -> Optional[Version]:
         ...
     
     async def check_app_compatibility(

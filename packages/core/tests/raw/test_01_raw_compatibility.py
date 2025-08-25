@@ -2,13 +2,13 @@ import pytest
 from unittest.mock import patch
 from datetime import datetime
 import calendar
-
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
+from packages.interfaces.connection import DeviceState
 from packages.interfaces.errors.bootloader_error import DeviceBootloaderError, DeviceBootloaderErrorType, deviceBootloaderErrorTypeDetails
 from packages.interfaces.errors.compatibility_error import DeviceCompatibilityError, DeviceCompatibilityErrorType, deviceCompatibilityErrorTypeDetails
 from packages.core.src.sdk import SDK
 from packages.core.src.utils.packetversion import PacketVersionMap
-
+from packages.core.src.deprecated import DeprecatedCommunication
 
 @pytest.fixture
 async def setup():
@@ -32,6 +32,30 @@ async def setup():
         connection.configure_listeners(on_data)
 
         sdk = await SDK.create(connection, applet_id)
+
+        if sdk.deprecated is None:
+            sdk.deprecated = DeprecatedCommunication(sdk)
+
+        sdk.get_version = lambda: "2.7.1"
+        sdk.get_packet_version = lambda: PacketVersionMap.v3
+        sdk.get_connection = lambda: connection
+        sdk.get_device_state = lambda: DeviceState.MAIN
+        sdk.is_in_bootloader = lambda: False
+
+        async def async_get_device_state():
+            return DeviceState.MAIN
+        
+        async def async_is_in_bootloader():
+            return False
+        
+        async def async_is_supported():
+            return False
+        
+        sdk.get_device_state = async_get_device_state
+        sdk.is_in_bootloader = async_is_in_bootloader
+        sdk.is_supported = async_is_supported
+
+        await connection.before_operation()
         await sdk.before_operation()
 
         connection.remove_listeners()

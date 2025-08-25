@@ -12,7 +12,7 @@ semver = "^3.0.0"
 hid = "^1.0.8"
 pyusb = "^1.2.1"
 packaging = "^23.0"
-betterproto = "*"
+betterproto = "^1.2.5"
 httpx = "^0.24.0"
 
 [tool.poetry.group.dev.dependencies]
@@ -22,6 +22,7 @@ mypy = "^1.10.0"
 pytest = "^8.2.2"
 pytest-asyncio = "^1.1.0"
 hypothesis = "^6.127.4"
+betterproto = { version = "^1.2.5", extras = ["compiler"] }
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

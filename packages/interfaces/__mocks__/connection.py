@@ -40,7 +40,7 @@ class MockDeviceConnection:
         return self.connection_type
 
     async def is_connected(self) -> bool:
-        return not self.is_destroyed
+        return not self.is_destroyed and self.is_connection_open
 
     async def before_operation(self) -> None:
         self.is_connection_open = True
@@ -67,12 +67,15 @@ class MockDeviceConnection:
             raise DeviceConnectionError(DeviceConnectionErrorType.CONNECTION_CLOSED)
 
         if self.on_data:
-            # Check if the callback expects a data parameter
-            sig = inspect.signature(self.on_data)
-            if len(sig.parameters) > 0:
-                await self.on_data(data)
-            else:
-                await self.on_data()
+            try:
+                sig = inspect.signature(self.on_data)
+                if len(sig.parameters) > 0:
+                    await self.on_data(data)
+                else:
+                    await self.on_data()
+            except Exception:
+                pass
+
 
     async def mock_device_send(self, data: bytes) -> None:
         packet_data = {"id": str(uuid.uuid4()), "data": data}

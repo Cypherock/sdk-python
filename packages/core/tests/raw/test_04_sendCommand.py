@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime
 import calendar
 
 from packages.core.src.sdk import SDK
@@ -8,6 +7,8 @@ from packages.core.tests.raw.__fixtures__.sendCommand import raw_send_command_te
 from packages.interfaces.__mocks__.connection import MockDeviceConnection
 from packages.interfaces.errors.connection_error import DeviceConnectionError
 from packages.core.tests.__fixtures__.config import config
+from packages.core.src.encoders.packet.packet import encode_packet, decode_packet
+from packages.core.src.config import v3 as config_v3
 
 
 @pytest.fixture
@@ -54,11 +55,7 @@ async def test_should_be_able_to_send_command(setup):
                         packet_index = i
                         break
                 assert packet_index >= 0
-                
-                # Import necessary functions to generate correct ACK packets
-                from packages.core.src.encoders.packet.packet import encode_packet, decode_packet
-                from packages.core.src.config import v3 as config_v3
-                
+
                 # Decode the sent packet to get its sequence number
                 decoded_packet = decode_packet(data, "v3")
                 if decoded_packet:

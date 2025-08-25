@@ -2,7 +2,7 @@ from typing import TypeVar, Optional, Dict
 from packages.interfaces.errors.app_error import DeviceAppErrorType, DeviceAppError
 from packages.util.utils.assert_utils import assert_condition
 
-from packages.core.src.encoders.proto.generated.types import ICommonError
+from packages.core.src.encoders.proto.generated.error import CommonError
 
 T = TypeVar('T')
 
@@ -15,7 +15,7 @@ def assert_or_throw_invalid_result(condition: T) -> T:
     return condition
 
 
-def parse_common_error(error: Optional[ICommonError]) -> None:
+def parse_common_error(error: Optional[CommonError]) -> None:
     if error is None:
         return
 

@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime
 import calendar
 
 from packages.core.src.sdk import SDK

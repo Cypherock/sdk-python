@@ -28,7 +28,6 @@ class TestWriteCommand:
                 self.connection = await MockDeviceConnection.create()
                 await self.connection.before_operation()
                 
-                self.connection.remove_listeners()
                 self.connection.configure_device(
                     DeviceState.MAIN,
                     ConnectionTypeMap.SERIAL_PORT.value,
@@ -84,7 +83,6 @@ class TestWriteCommand:
                 self.connection = await MockDeviceConnection.create()
                 await self.connection.before_operation()
                 
-                self.connection.remove_listeners()
                 self.connection.configure_device(
                     DeviceState.MAIN,
                     ConnectionTypeMap.SERIAL_PORT.value,
