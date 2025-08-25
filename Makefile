@@ -46,9 +46,9 @@ format:
 # Clean generated files
 clean:
 	@echo "Cleaning generated files..."
-	find . -name "*.pyc" -delete
-	find . -name "__pycache__" -type d -exec rm -rf {} +
-	find . -name "*.egg-info" -type d -exec rm -rf {} +
-	find . -name "dist" -type d -exec rm -rf {} +
-	find . -name "build" -type d -exec rm -rf {} +
+	find . -name "*.pyc" -not -path "./*/.git/*" -delete
+	find . -name "__pycache__" -type d -not -path "./*/.git/*" -exec rm -rf {} +
+	find . -name "*.egg-info" -type d -not -path "./*/.git/*" -exec rm -rf {} +
+	find . -name "dist" -type d -not -path "./*/.git/*" -exec rm -rf {} +
+	find . -name "build" -type d -not -path "./*/.git/*" -exec rm -rf {} +
 	@echo "Clean complete!"

@@ -116,7 +116,6 @@ The SDK uses Protocol Buffers for communication with the Cypherock X1 device. Be
 Run the prebuild process in these scenarios:
 - After cloning the repository for the first time
 - After pulling changes that include updates to `.proto` files
-- Before committing generated files
 - When setting up a new development environment
 
 #### Running Prebuild
