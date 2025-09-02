@@ -1,6 +1,13 @@
 from typing import Dict, List, Optional, Literal
 from packages.util.utils.assert_utils import assert_condition
-from bdkpython import Network
+
+# Optional BDK import
+try:
+    from bdkpython import Network
+    BDK_AVAILABLE = True
+except ImportError:
+    Network = None
+    BDK_AVAILABLE = False
 
 HARDENED_BASE = 0x80000000
 
@@ -26,7 +33,6 @@ class NetworkConfig:
         self.wif = wif
 
 
-# --- Networks (1:1 with TS) ---
 bitcoin = NetworkConfig(
     message_prefix='\x18Bitcoin Signed Message:\n',
     bech32='bc',
@@ -77,8 +83,6 @@ dogecoin = NetworkConfig(
     wif=0x9e,
 )
 
-
-# --- Maps (1:1 with TS) ---
 coin_index_to_network_map: Dict[int, Optional[NetworkConfig]] = {
     BITCOIN_COIN_INDEX: bitcoin,
     TESTNET_COIN_INDEX: testnet,
@@ -142,7 +146,11 @@ def assert_derivation_path(path: List[int]) -> None:
         f"Purpose: {hex(path[0])} not supported for given coin index: {hex(path[1])}",
     )
 
-def to_bdk_network(config: NetworkConfig) -> Network:
+def to_bdk_network(config: NetworkConfig):
+    """Convert NetworkConfig to BDK Network (if BDK is available)."""
+    if not BDK_AVAILABLE:
+        raise ImportError("bdkpython is not installed. Install with: pip install bdkpython")
+    
     if config is bitcoin:
         return Network.BITCOIN
     elif config is testnet:

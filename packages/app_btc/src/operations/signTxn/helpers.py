@@ -7,7 +7,6 @@ from .types import SignTxnParams
 def assert_sign_txn_params(params: SignTxnParams) -> None:
     """
     Assert that sign transaction parameters are valid.
-    Direct port of TypeScript assertSignTxnParams function.
     
     Args:
         params: Parameters to validate
