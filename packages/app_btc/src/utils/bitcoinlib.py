@@ -1,33 +1,36 @@
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any
+import bitcoinlib
+from bitcoinlib.keys import HDKey
 
-if TYPE_CHECKING:
-    import bitcointx
+bitcoin_py_lib: Optional[Any] = None
 
-_bitcoin_lib: Optional['bitcointx'] = None
-
-
-def get_bitcoin_lib() -> 'bitcointx':
-    """
-    Get the configured bitcointx instance.
-    
-    Returns:
-        The bitcointx module
-        
-    Raises:
-        RuntimeError: If bitcointx has not been set
-    """
-    if _bitcoin_lib is None:
-        raise RuntimeError('bitcointx has not been set yet')
-    return _bitcoin_lib
+def get_bitcoin_py_lib() -> Any:
+    if not bitcoin_py_lib:
+        raise RuntimeError("bitcoinpy-lib has not been set yet")
+    return bitcoin_py_lib
 
 
-def set_bitcoin_lib(bitcoin_library: 'bitcointx') -> None:
-    """
-    Set the bitcointx library to use.
-    
-    Args:
-        bitcoin_library: The bitcointx module to use
-    """
-    global _bitcoin_lib
-    _bitcoin_lib = bitcoin_library
+def set_bitcoin_py_lib(bitcoin_py_library: Any) -> None:
+    global bitcoin_py_lib
+    bitcoin_py_lib = bitcoin_py_library
 
+
+class BitcoinJSLibWrapper:
+    class payments:
+        @staticmethod
+        def p2pkh(pubkey: bytes, network: str = "bitcoin") -> dict:
+            hd_key = HDKey(pubkey, network=network)
+            address = hd_key.address(encoding='base58')
+            return {"address": address}
+
+        @staticmethod
+        def p2wpkh(pubkey: bytes, network: str = "bitcoin") -> dict:
+            hd_key = HDKey(pubkey, network=network)
+            address = hd_key.address(encoding='bech32')
+            return {"address": address}
+
+    keys = bitcoinlib.keys
+    networks = bitcoinlib
+
+def initialize_default_bitcoin_lib() -> None:
+    set_bitcoin_py_lib(BitcoinJSLibWrapper())

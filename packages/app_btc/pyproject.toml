@@ -8,9 +8,12 @@ packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11"
-python-bitcointx = "^1.1.5"
-btclib = "^2023.7.12"
+bitcoinlib = "^0.7.5"
 httpx = "^0.24.0"
+base58 = "^2.1.1"
+ecdsa = "^0.18.0"
+bech32 = "^1.2.0"
+coincurve = "^20.0.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.0"
