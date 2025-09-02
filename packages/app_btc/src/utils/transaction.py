@@ -1,108 +1,73 @@
 from typing import List, Dict, Any
-from bitcointx.core import CTransaction, CTxOut, COutPoint
-from bitcointx.core.psbt import PartiallySignedTransaction as PSBT
-from bitcointx.core.script import CScript
-from bitcointx.wallet import CBitcoinAddress, P2PKHCoinAddress
-from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
-from packages.util.utils.assert_utils import assert_condition
-from packages.app_btc.src.utils.network import get_network_from_path
+from packages.app_btc.src.utils.bitcoinlib import get_bitcoin_py_lib
 
 def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
-    """
-    Convert address to script public key.
-    Automatically detects P2PKH / P2SH / P2WPKH formats.
-    """
-    get_network_from_path(derivation_path)
-    addr = CBitcoinAddress(address)
-    return addr.to_scriptPubKey().hex()
+    bitcoin_py_lib = get_bitcoin_py_lib()
+    network = 'bitcoin' if derivation_path[1] == 0 else 'testnet'
+
+    from bitcoinlib.scripts import Script
+    script = Script.parse_address(address)
+    return script.raw.hex()
 
 
 def is_script_segwit(script: str) -> bool:
-    """
-    Check if script is a segwit script (starts with OP_0 + 20-byte hash).
-    """
-    return script.startswith("0014")
+    return script.startswith('0014')
 
+def create_signed_transaction(params: Dict[str, Any]) -> str:
+    inputs = params['inputs']
+    outputs = params['outputs']
+    signatures = params['signatures']
+    derivation_path = params['derivation_path']
 
-class CustomSigner:
-    def __init__(self, public_key: bytes, signature_data: str):
-        self.public_key = public_key
-        self.signature_data = signature_data
-        self._decoded_signature = None
+    bitcoin_py_lib = get_bitcoin_py_lib()
+    network = 'bitcoin' if derivation_path[1] == 0 else 'testnet'
 
-    def _decode_signature(self) -> tuple:
-        """
-        Decode DER-encoded ECDSA signature into (r, s).
-        Equivalent to bip66.decode.
-        """
-        if self._decoded_signature is None:
-            der_length = int(self.signature_data[4:6], 16) * 2
-            der_encoded = self.signature_data[2:der_length + 6]
+    from bitcoinlib.transactions import Transaction
 
-            r, s = decode_dss_signature(bytes.fromhex(der_encoded))
-            self._decoded_signature = (r, s)
+    transaction = Transaction(network=network)
 
-        return self._decoded_signature
-
-    def sign(self, _hash_to_sign: bytes) -> bytes:
-        """
-        Return pre-computed r||s signature (64 bytes).
-        """
-        r, s = self._decode_signature()
-
-        r_bytes = r.to_bytes(32, "big")
-        s_bytes = s.to_bytes(32, "big")
-
-        return r_bytes + s_bytes
-
-
-def create_signed_transaction(
-    inputs: List[Dict[str, Any]],
-    outputs: List[Dict[str, Any]],
-    signatures: List[str],
-    derivation_path: List[int]
-) -> str:
-    network = get_network_from_path(derivation_path)
-
-    psbt = PSBT()
-
-    # Add inputs
-    for i, input_data in enumerate(inputs):
-        script = address_to_script_pub_key(input_data["address"], derivation_path)
+    for input_data in inputs:
+        script = address_to_script_pub_key(input_data['address'], derivation_path)
         is_segwit = is_script_segwit(script)
 
-        outpoint = COutPoint(
-            hash=bytes.fromhex(input_data["prev_txn_id"]),
-            n=input_data["prev_index"]
-        )
+        txn_input = {
+            'prev_txid': input_data['prevTxnId'],
+            'output_n': input_data['prevIndex'],
+            'value': int(input_data['value'])
+        }
 
         if is_segwit:
-            witness_utxo = CTxOut(
-                nValue=int(input_data["value"]),
-                scriptPubKey=CScript(bytes.fromhex(script))
-            )
-            psbt.add_input(outpoint, witness_utxo=witness_utxo)
+            txn_input['witness'] = True
         else:
-            assert_condition(input_data.get("prev_txn"), "prevTxn is required in input")
-            non_witness_utxo = CTransaction.deserialize(bytes.fromhex(input_data["prev_txn"]))
-            psbt.add_input(outpoint, non_witness_utxo=non_witness_utxo)
+            assert input_data.get('prevTxn'), 'prevTxn is required in input'
+            txn_input['unlocking_script'] = input_data['prevTxn']
 
-    # Add outputs
+        transaction.add_input(**txn_input)
+
     for output in outputs:
-        output_txout = CTxOut(
-            nValue=int(output["value"]),
-            scriptPubKey=P2PKHCoinAddress.from_string(
-                output["address"], network=network
-            ).to_scriptPubKey()
+        transaction.add_output(
+            address=output['address'],
+            value=int(output['value'])
         )
-        psbt.add_output(output_txout)
 
-    # Sign inputs with custom pre-computed signatures
     for i, signature in enumerate(signatures):
+        der_length = int(signature[4:6], 16) * 2
+        der_encoded = signature[2:der_length + 6]
         public_key = bytes.fromhex(signature[-66:])
-        signer = CustomSigner(public_key, signature)
-        psbt.sign_with(signer, input_index=i)
 
-    # Finalize and extract
-    psbt.finalize()
-    return psbt.tx.serialize().hex()
+        der_bytes = bytes.fromhex(der_encoded)
+
+        r_length = der_bytes[3]
+        r = der_bytes[4:4 + r_length]
+        s_start = 4 + r_length + 2
+        s_length = der_bytes[s_start - 1]
+        s = der_bytes[s_start:s_start + s_length]
+
+        r_value = r[-32:] if len(r) > 32 else b'\x00' * (32 - len(r)) + r
+        s_value = s[-32:] if len(s) > 32 else b'\x00' * (32 - len(s)) + s
+
+        signature_bytes = r_value + s_value
+
+        transaction.sign(signature_bytes, i, public_key)
+
+    return transaction.raw_hex()
