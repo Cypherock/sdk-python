@@ -274,19 +274,21 @@ class SDK:
         on_status: Optional[Callable[[Any], None]] = None,
         options: Optional[Dict[str, Any]] = None,
     ):
+        print("get_app_versions started")
         await self.validate_not_in_bootloader_mode()
+        print("validate_not_in_bootloader_mode completed")
         assert_condition(
             self.packet_version,
             DeviceCompatibilityError(
                 DeviceCompatibilityErrorType.DEVICE_NOT_SUPPORTED,
             ),
         )
-
+        print("assert_condition completed")
         if not await self.is_supported():
             raise DeviceCompatibilityError(
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
-
+        print("is_supported completed")
         if not self.app_versions_map:
             result = await commands.get_app_versions(
                 commands.GetAppVersionsParams(
@@ -337,8 +339,9 @@ class SDK:
         version: Dict[str, str],
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
+        print("check_app_compatibility started")
         app_versions_result = await self.get_app_versions(None, options)
-
+        print("get_app_versions completed")
         app_version_result = None
         for app in app_versions_result.app_versions:
             if app.id == self.applet_id:

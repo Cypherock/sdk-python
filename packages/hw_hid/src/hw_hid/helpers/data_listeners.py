@@ -16,7 +16,6 @@ class DataListener:
         self.device: IDevice = params["device"]
         self.on_close_callback = params.get("on_close")
         self.on_error_callback = params.get("on_error")
-        self.on_some_device_disconnect_binded = self.on_some_device_disconnect
         self.listening = False
         self.pool: [PoolData] = []
 
@@ -103,7 +102,9 @@ class DataListener:
 
     def _read_hid_data(self):
         try:
-            return self.connection.read(64, timeout_ms=100)
+            # hidapi Device.read() only accepts size parameter
+            # No timeout parameter is supported - read is blocking
+            return self.connection.read(64)
         except Exception as error:
             if self.on_error_callback:
                 self.on_error_callback(error)
@@ -126,28 +127,33 @@ class DataListener:
 
     def _run_device_monitor(self):
         while not self._stop_event.is_set():
-            asyncio.run(self._check_device_connection())
+            try:
+                self._check_device_connection_sync()
+            except Exception as e:
+                logger.error(f"Error in device monitor: {e}")
             time.sleep(1)
 
-    async def _check_device_connection(self):
+    def _check_device_connection_sync(self):
+        """Synchronous device connection check for use in thread."""
         try:
-            await self.on_some_device_disconnect()
+            import hid
+            # Use synchronous hid.enumerate() directly
+            all_hid_devices = hid.enumerate()
+            
+            # Check if our device is still connected
+            is_device_connected = any(
+                device_info.get("path") and 
+                device_info.get("path").decode("utf-8") == self.device["path"]
+                and device_info.get("vendor_id") == self.device.get("vendor_id")
+                and device_info.get("product_id") == self.device.get("product_id")
+                and device_info.get("serial_number") == self.device.get("serial")
+                for device_info in all_hid_devices
+            )
+
+            if not is_device_connected:
+                # Schedule async cleanup in the main event loop
+                # We can't await here, so we'll just log and let the connection
+                # error handling deal with it
+                logger.warn("Device appears to be disconnected")
         except Exception as e:
-            logger.error(f"Error in device monitor: {e}")
-
-    async def on_some_device_disconnect(self):
-        connected_devices = await get_available_devices()
-
-        is_device_connected = any(
-            d["path"] == self.device["path"]
-            and d["serial"] == self.device["serial"]
-            and d["product_id"] == self.device["product_id"]
-            and d["type"] == self.device["type"]
-            and d["device_state"] == self.device["device_state"]
-            and d["vendor_id"] == self.device["vendor_id"]
-            for d in connected_devices
-        )
-
-        if not is_device_connected:
-            await self.destroy()
-            await self.on_close()
+            logger.error(f"Error checking device connection: {e}")

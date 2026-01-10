@@ -41,6 +41,8 @@ async def get_app_versions(params: GetAppVersionsParams):
         )
     )
     msg_data = uint8array_to_hex(bytes(msg))
+    print("send_command started")
+    print(msg_data)
     await send_command(
         connection=params.connection,
         proto_data=msg_data,
@@ -50,6 +52,7 @@ async def get_app_versions(params: GetAppVersionsParams):
         sequence_number=params.sequence_number,
         timeout=timeout,
     )
+    print("send_command completed")
     result = await wait_for_result(
         connection=params.connection,
         applet_id=0,
@@ -59,6 +62,7 @@ async def get_app_versions(params: GetAppVersionsParams):
         on_status=params.on_status,
         options=params.options,
     )
+    print("wait_for_result completed")
     try:
         msg = Msg.parse(result)
     except TypeError:

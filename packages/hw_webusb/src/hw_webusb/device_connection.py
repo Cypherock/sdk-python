@@ -26,7 +26,7 @@ class DeviceConnection(IDeviceConnection):
         self.initialized: bool = True
 
     async def get_connection_type(self) -> str:
-        return ConnectionTypeMap.WEBUSB
+        return ConnectionTypeMap.WEBUSB.value
 
     @staticmethod
     async def connect(connection: usb.core.Device):

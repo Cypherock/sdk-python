@@ -11,13 +11,16 @@ logger = create_logger_with_prefix(rootlogger, "GetDeviceInfo")
 async def get_device_info(sdk: ISDK) -> GetDeviceInfoResultResponse:
     logger.info("Started")
     await sdk.check_app_compatibility(APP_VERSION)
-
-    helper = OperationHelper(sdk, "getDeviceInfo", "getDeviceInfo")
-
+    print("check_app_compatibility completed########################")
+    helper = OperationHelper(sdk, "get_device_info", "get_device_info")
+    print("helper created########################")
     await helper.send_query({"initiate": {}})
+    print("send_query completed########################")
     result = await helper.wait_for_result()
+    print("wait_for_result completed########################")
     logger.verbose("GetDeviceInfoResponse", {"result": result})
     assert_or_throw_invalid_result(result.result)
-
+    print("assert_or_throw_invalid_result completed########################")
     logger.info("Completed")
+    print("Completed########################")
     return result.result

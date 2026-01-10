@@ -101,6 +101,8 @@ def wait_for_packet(
                         continue
 
                     packet_list = decode_packet(raw_packet, version)
+                    print("decode_packet completed")
+                    print(packet_list)
 
                     is_success = False
                     received_packet: Optional[DecodedPacketData] = None
@@ -119,9 +121,13 @@ def wait_for_packet(
                                 payload_data = decode_payload_data(
                                     packet["payload_data"], version
                                 )
+                                print("decode_payload_data completed")
+                                print(payload_data)
                                 raw_data = payload_data["raw_data"]
 
                                 reject_status = int(f"0x{raw_data}", 16)
+                                print("reject_status completed")
+                                print(reject_status)
                                 latest_seq_number = (
                                     await connection.get_sequence_number()
                                 )
@@ -144,6 +150,9 @@ def wait_for_packet(
                                     reject_reason = inner_reject_reason
                                 else:
                                     reject_reason = f"Unknown reject reason: {raw_data}"
+
+                                print("reject_reason completed")
+                                print(reject_reason)
 
                                 error.message = f"The write packet operation was rejected by the device because: {reject_reason}"
 

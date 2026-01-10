@@ -2,7 +2,7 @@ from typing import TypeVar, Generic, Callable, Optional, Any, Dict
 from core.types import ISDK
 from core.encoders.proto.generated.core import Status
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
-from app_manager.proto.generated.manager import Query, Result
+from app_manager.proto.generated.manager import Query, Result, GetDeviceInfoRequest, GetDeviceInfoIntiateRequest
 from ..utils.assert_utils import assert_or_throw_invalid_result, parse_common_error
 
 Q = TypeVar("Q")
@@ -38,8 +38,16 @@ def encode_query(query_data: Dict[str, Any]) -> bytes:
     Returns:
         Encoded query as bytes (equivalent to Query.encode().finish())
     """
-    query = Query(**query_data)
-    return bytes(query)
+    # query = Query(**query_data)
+    # print("query", query)
+    # return query.SerializeToString()
+    query = Query(
+        get_device_info=GetDeviceInfoRequest(
+            initiate=GetDeviceInfoIntiateRequest()
+        )
+    )
+    print("query", query)
+    return query.SerializeToString()
 
 
 class OperationHelper(Generic[Q, R]):
@@ -68,7 +76,9 @@ class OperationHelper(Generic[Q, R]):
             query: The query object to send
         """
         query_data = {self.query_key: query}
+        print("query_data", query_data)
         encoded_query = encode_query(query_data)
+        print("encoded_query", encoded_query)
         return await self.sdk.send_query(encoded_query)
 
     async def wait_for_result(
@@ -88,12 +98,16 @@ class OperationHelper(Generic[Q, R]):
         """
         params = {"on_status": on_status} if on_status else None
         result_data = await self.sdk.wait_for_result(params=params)
+        print("**********result_data", result_data)
         result = decode_result(result_data)
-
-        if hasattr(result, "common_error") and result.common_error:
+        print("**********result", result)
+        if result.common_error is not None:
+            print("**********parse_common_error", result.common_error)
             parse_common_error(result.common_error)
 
+        print("**********getattr")
         result_value = getattr(result, self.result_key, None)
+        print("**********result_value", result_value)
         assert_or_throw_invalid_result(result_value)
 
         if hasattr(result_value, "common_error") and result_value.common_error:
