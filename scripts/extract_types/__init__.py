@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+"""
+Extract and re-export types from generated protobuf (pb2) files.
+This script creates a types.py file that re-exports commonly used types from pb2 files.
+"""
 import os
 import sys
 import re
-from tsort import t_sort
-from typing import Dict, List
+from pathlib import Path
+from typing import Set, Dict, List, Tuple
 
-ignore_files = ["types.py", "__init__.py"]
+ignore_files = ["types.py", "__init__.py", "common.py", "error.py"]
 
 
 def throw_invalid_usage():
@@ -18,241 +22,246 @@ def throw_invalid_usage():
 if len(sys.argv) != 3:
     throw_invalid_usage()
 
-root_path = sys.argv[1]
-interface_file_path = sys.argv[2]
+root_path = Path(sys.argv[1])
+types_file_path = Path(sys.argv[2])
 
 
-def count_chars(s, c):
-    return s.count(c)
+def smart_case_convert(name: str) -> str:
+    """
+    Convert uppercase enum/message names to PascalCase intelligently.
+    Uses known mappings and intelligent word boundary detection.
+    """
+    # Known mappings for common patterns
+    known_mappings = {
+        'STATUS': 'Status',
+        'COMMAND': 'Command',
+        'MSG': 'Msg',
+        'ERRORCMD': 'ErrorCmd',
+        'ERRORTYPE': 'ErrorType',
+        'DEVICEWAITINGON': 'DeviceWaitingOn',
+        'DEVICEIDLESTATE': 'DeviceIdleState',
+        'CMDSTATE': 'CmdState',
+        'VERSION': 'Version',
+        'CHUNKPAYLOAD': 'ChunkPayload',
+        'CHUNKACK': 'ChunkAck',
+        'SEEDGENERATIONSTATUS': 'SeedGenerationStatus',
+        'COMMONERROR': 'CommonError',
+        'WALLETNOTFOUND': 'WalletNotFound',
+        'WALLETPARTIALSTATE': 'WalletPartialState',
+        'CARDERROR': 'CardError',
+        'USERREJECTION': 'UserRejection',
+        'DATAFLOW': 'DataFlow',
+        # Session types
+        'SESSIONSTARTCMD': 'SessionStartCmd',
+        'SESSIONSTARTREQUEST': 'SessionStartRequest',
+        'SESSIONSTARTRESPONSE': 'SessionStartResponse',
+        'SESSIONSTARTINITIATEREQUEST': 'SessionStartInitiateRequest',
+        'SESSIONSTARTBEGINREQUEST': 'SessionStartBeginRequest',
+        'SESSIONSTARTACKRESPONSE': 'SessionStartAckResponse',
+        'SESSIONSTARTINITIATERESULTRESPONSE': 'SessionStartInitiateResultResponse',
+        'SESSIONCLOSECMD': 'SessionCloseCmd',
+        'SESSIONCLOSEREQUEST': 'SessionCloseRequest',
+        'SESSIONCLOSERESPONSE': 'SessionCloseResponse',
+        'SESSIONCLOSECLEARREQUEST': 'SessionCloseClearRequest',
+        'SESSIONCLOSECLEARRESPONSE': 'SessionCloseClearResponse',
+        # Version types
+        'APPVERSIONCMD': 'AppVersionCmd',
+        'APPVERSIONREQUEST': 'AppVersionRequest',
+        'APPVERSIONRESPONSE': 'AppVersionResponse',
+        'APPVERSIONINTIATEREQUEST': 'AppVersionInitiateRequest',
+        'APPVERSIONRESULTRESPONSE': 'AppVersionResultResponse',
+        'APPVERSIONITEM': 'AppVersionItem',
+    }
+    
+    if name in known_mappings:
+        return known_mappings[name]
+    
+    # Try to detect word boundaries using common prefixes and suffixes
+    # Common suffixes
+    suffixes = {
+        'STATE': 'State',
+        'TYPE': 'Type',
+        'CMD': 'Cmd',
+        'ERROR': 'Error',
+        'REQUEST': 'Request',
+        'RESPONSE': 'Response',
+        'STATUS': 'Status',
+        'ITEM': 'Item',
+    }
+    
+    # Common prefixes/words
+    common_words = [
+        'SESSION', 'START', 'CLOSE', 'CLEAR', 'INITIATE', 'BEGIN', 'ACK', 'RESULT',
+        'APP', 'VERSION', 'DEVICE', 'WALLET', 'CARD', 'USER', 'COMMON', 'CHUNK',
+        'SEED', 'GENERATION', 'WAITING', 'IDLE', 'COMMAND', 'ERROR', 'PARTIAL',
+        'NOT', 'FOUND', 'PAYLOAD', 'DATA', 'FLOW'
+    ]
+    
+    # Try suffix matching first
+    for suffix_key, suffix_value in suffixes.items():
+        if name.endswith(suffix_key) and len(name) > len(suffix_key):
+            prefix = name[:-len(suffix_key)]
+            if prefix:
+                # Split prefix into words
+                words = []
+                remaining = prefix
+                while remaining:
+                    found = False
+                    for word in common_words:
+                        if remaining.startswith(word):
+                            words.append(word)
+                            remaining = remaining[len(word):]
+                            found = True
+                            break
+                    if not found:
+                        # Take as one word if no match
+                        words.append(remaining)
+                        break
+                
+                if words:
+                    prefix_converted = ''.join(w.capitalize() for w in words)
+                    return prefix_converted + suffix_value
+    
+    # Fallback: try to split on common word boundaries
+    words = []
+    remaining = name
+    while remaining:
+        found = False
+        for word in sorted(common_words, key=len, reverse=True):  # Try longer words first
+            if remaining.startswith(word):
+                words.append(word)
+                remaining = remaining[len(word):]
+                found = True
+                break
+        if not found:
+            # Take remaining as one word
+            if remaining:
+                words.append(remaining)
+            break
+    
+    if words:
+        return ''.join(w.capitalize() for w in words)
+    
+    return name.capitalize()
 
 
-global_interface_list: Dict[str, List[str]] = {}
-global_enum_list: Dict[str, List[str]] = {}
+def extract_types_from_pb2_file(file_path: Path) -> List[str]:
+    """
+    Extract type names from a pb2 file by parsing _globals references.
+    Returns a list of type names in correct PascalCase.
+    """
+    types: List[str] = []
+    
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # Extract from _globals['_TYPENAME'] patterns
+        # These reference the enum and message types
+        pattern = r"_globals\['_([A-Z][A-Z0-9_]*)'\]"
+        matches = re.findall(pattern, content)
+        
+        seen_uppercase = set()
+        for match in matches:
+            # Convert to PascalCase using smart conversion
+            type_name = smart_case_convert(match)
+            if type_name and type_name not in types:
+                types.append(type_name)
+                seen_uppercase.add(match)
+        
+        # Also try AST parsing for any explicit class definitions
+        try:
+            import ast
+            tree = ast.parse(content, filename=str(file_path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    class_name = node.name
+                    if not class_name.startswith("_") and class_name[0].isupper():
+                        if class_name not in types:
+                            types.append(class_name)
+        except Exception:
+            pass
+    
+    except Exception as e:
+        print(f"Warning: Could not parse {file_path}: {e}", file=sys.stderr)
+    
+    return sorted(set(types))
 
 
-def remember_interface(interface_list: Dict[str, List[str]]) -> None:
-    global global_interface_list
-    global_interface_list.update(interface_list)
-
-
-def remember_enum(enum_list: Dict[str, List[str]]) -> None:
-    global global_enum_list
-    global_enum_list.update(enum_list)
-
-
-def save_interfaces(
-    parsed_interfaces: Dict[str, Dict[str, List[str]]], tsort_edges: List[List[str]]
-) -> None:
-    sorted_keys = t_sort(tsort_edges)[::-1]
-
-    interface_file_data = []
-    enum_file_data = []
-
-    for key in sorted_keys:
-        if key in parsed_interfaces:
-            interface_file_data.append("\n".join(parsed_interfaces[key]["data"]))
-
-    for key in global_enum_list:
-        enum_file_data.append("\n".join(global_enum_list[key]))
-
-    # Add proper imports at the top
-    imports = [
-        "from dataclasses import dataclass",
-        "from typing import List, Optional, Union, Dict, Any",
-        "import betterproto",
-        "",
+def generate_types_file(root_path: Path, types_file_path: Path) -> None:
+    """Generate a types.py file that re-exports types from pb2 files."""
+    imports: List[str] = []
+    all_exports: Set[str] = set()
+    
+    # Find all pb2 files in the root_path
+    pb2_files = list(root_path.rglob("*_pb2.py"))
+    
+    if not pb2_files:
+        print(f"Warning: No pb2 files found in {root_path}", file=sys.stderr)
+        types_file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(types_file_path, "w", encoding="utf-8") as f:
+            f.write("# Generated by extract_types script\n# No pb2 files found\n\n__all__ = []\n")
+        return
+    
+    # Group imports by file
+    file_exports: Dict[str, List[str]] = {}
+    
+    for file_path in pb2_files:
+        if file_path.name in ignore_files:
+            continue
+        
+        module_name = file_path.stem
+        exports = extract_types_from_pb2_file(file_path)
+        
+        if exports:
+            # Determine import path - relative to root_path
+            rel_dir = file_path.parent.relative_to(root_path)
+            if str(rel_dir) == ".":
+                import_path = f".{module_name}"
+            else:
+                import_path = f".{str(rel_dir).replace(os.sep, '.')}.{module_name}"
+            
+            file_exports[import_path] = exports
+            all_exports.update(exports)
+    
+    # Generate import statements
+    for import_path, exports in sorted(file_exports.items()):
+        if exports:
+            imports.append(f"from {import_path} import {', '.join(exports)}")
+    
+    # Generate the types.py file content
+    content_lines = [
         "# Generated by extract_types script",
-        "# Consolidates enums and interfaces from betterproto-generated files",
+        "# Re-exports types from generated protobuf (pb2) files",
         "",
     ]
-
-    file_data = (
-        "\n".join(imports)
-        + "\n\n"
-        + "\n\n".join(enum_file_data)
-        + "\n\n"
-        + "".join(interface_file_data)
-    )
-
-    with open(interface_file_path, "w") as f:
-        f.write(file_data)
-
-
-def parse_interfaces() -> None:
-    parsed_interfaces: Dict[str, Dict[str, List[str]]] = {}
-    interface_names: List[str] = list(global_interface_list.keys())
-    original_interface_names: List[str] = [name[1:] for name in interface_names]
-    interface_block: List[str] = []
-    tsort_edges: List[List[str]] = []
-
-    for interface_name in interface_names:
-        lines = global_interface_list[interface_name]
-        interface_block.append(lines[0])
-        dependencies = []
-
-        for i in range(1, len(lines) - 1):
-            line = lines[i]
-            is_modified = False
-
-            for idx, inner_interface_name in enumerate(original_interface_names):
-                pattern = rf"(\s*\w+\s*:\s*)({inner_interface_name})(\s*(?:\[.*?\])?(?:\s*\|\s*None)?)"
-                match = re.search(pattern, line)
-
-                if match:
-                    is_modified = True
-                    interface_idx = original_interface_names.index(inner_interface_name)
-                    dependencies.append(interface_names[interface_idx])
-
-                    if interface_name == interface_names[interface_idx]:
-                        print(
-                            f"Warning: Cyclic dependency found: {interface_name} <=> {interface_names[interface_idx]}"
-                        )
-                    else:
-                        tsort_edges.append(
-                            [interface_name, interface_names[interface_idx]]
-                        )
-
-                    new_line = f"{match.group(1)}{interface_names[interface_idx]}{match.group(3)}"
-                    interface_block.append(new_line)
-                    break
-
-            if not is_modified:
-                interface_block.append(line)
-
-        interface_block.append(lines[-1])
-        interface_block.append("\n")
-
-        parsed_interfaces[interface_name] = {
-            "data": interface_block,
-            "dependencies": dependencies,
-        }
-
-        if len(interface_block) <= 3:
-            interface_block.insert(0, "# Empty interface")
-
-        interface_block = []
-
-    save_interfaces(parsed_interfaces, tsort_edges)
-
-
-def extract_interfaces_from_file(file_data: List[str]) -> None:
-    interface_list: Dict[str, List[str]] = {}
-    is_interface_open = False
-    interface_name = ""
-    interface_block: List[str] = []
-    base_indent = 0
-
-    interface_start_regex = r"^(\s*)@dataclass\s*$"
-    class_regex = r"^(\s*)class\s+(\w+)\s*\(\s*betterproto\.Message\s*\):"
-
-    for i, line in enumerate(file_data):
-        if is_interface_open:
-            if line.strip() == "":
-                interface_block.append(line)
-            elif line.strip() and len(line) - len(line.lstrip()) <= base_indent:
-                interface_list[interface_name] = interface_block
-                interface_name = ""
-                interface_block = []
-                is_interface_open = False
-                if re.match(interface_start_regex, line) and i + 1 < len(file_data):
-                    next_line = file_data[i + 1]
-                    class_match = re.match(class_regex, next_line)
-                    if class_match:
-                        is_interface_open = True
-                        base_indent = len(class_match.group(1))
-                        interface_name = f"I{class_match.group(2)}"
-                        interface_block.append(
-                            f"{class_match.group(1)}class {interface_name}:"
-                        )
-            else:
-                interface_block.append(line)
-        else:
-            if re.match(interface_start_regex, line) and i + 1 < len(file_data):
-                next_line = file_data[i + 1]
-                class_match = re.match(class_regex, next_line)
-                if class_match:
-                    is_interface_open = True
-                    base_indent = len(class_match.group(1))
-                    interface_name = f"I{class_match.group(2)}"
-                    interface_block.append(line)
-                    interface_block.append(
-                        f"{class_match.group(1)}class {interface_name}:"
-                    )
-
-    if is_interface_open and interface_name:
-        interface_list[interface_name] = interface_block
-
-    remember_interface(interface_list)
-
-
-def extract_enums_from_file(file_data: List[str]) -> None:
-    enum_list: Dict[str, List[str]] = {}
-    is_enum_open = False
-    enum_name = ""
-    enum_block: List[str] = []
-    base_indent = 0
-
-    # betterproto generates enums as class X(betterproto.Enum): without @dataclass
-    class_regex = r"^(\s*)class\s+(\w+)\s*\(\s*betterproto\.Enum\s*\):"
-
-    for i, line in enumerate(file_data):
-        if is_enum_open:
-            if line.strip() == "":
-                enum_block.append(line)
-            elif line.strip() and len(line) - len(line.lstrip()) <= base_indent:
-                enum_list[enum_name] = enum_block
-                enum_name = ""
-                enum_block = []
-                is_enum_open = False
-                # Check for next enum
-                class_match = re.match(class_regex, line)
-                if class_match:
-                    is_enum_open = True
-                    base_indent = len(class_match.group(1))
-                    enum_name = class_match.group(2)
-                    enum_block.append(line)
-            else:
-                enum_block.append(line)
-        else:
-            # Look for enum class directly (no @dataclass decorator)
-            class_match = re.match(class_regex, line)
-            if class_match:
-                is_enum_open = True
-                base_indent = len(class_match.group(1))
-                enum_name = class_match.group(2)
-                enum_block.append(line)
-
-    if is_enum_open and enum_name:
-        enum_list[enum_name] = enum_block
-
-    remember_enum(enum_list)
-
-
-def extract_types_from_file(file_path: str) -> None:
-    with open(file_path, "r") as f:
-        file_data = f.read().split("\n")
-
-    extract_interfaces_from_file(file_data)
-    extract_enums_from_file(file_data)
-
-
-def extract_types(root_path: str) -> None:
-    for root, dirs, files in os.walk(root_path):
-        for file in files:
-            if file in ignore_files:
-                continue
-
-            file_path = os.path.join(root, file)
-
-            if not os.path.isfile(file_path) or not file_path.endswith(".py"):
-                continue
-
-            extract_types_from_file(file_path)
+    
+    if imports:
+        content_lines.extend(imports)
+        content_lines.append("")
+        content_lines.append(f"__all__ = {sorted(list(all_exports))}")
+    else:
+        content_lines.append("# No types found to export")
+        content_lines.append("__all__ = []")
+    
+    # Write the file (overwrite if it exists, as this is auto-generated)
+    types_file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(types_file_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(content_lines))
+    
+    print(f"Generated types file: {types_file_path} with {len(all_exports)} exports")
 
 
 def run() -> None:
-    extract_types(root_path)
-    parse_interfaces()
+    """Main entry point."""
+    root_path_obj = Path(root_path)
+    types_file_path_obj = Path(types_file_path)
+    
+    if not root_path_obj.exists():
+        print(f"Error: Root path does not exist: {root_path}", file=sys.stderr)
+        sys.exit(1)
+    
+    generate_types_file(root_path_obj, types_file_path_obj)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import asyncio
 from interfaces import IDeviceConnection
 from interfaces.errors.connection_error import DeviceConnectionError, DeviceConnectionErrorType
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
-from ...encoders.proto.generated.core import DeviceIdleState
+from ...encoders.proto.generated.core_pb2 import DeviceIdleState
 from ...utils.packetversion import PacketVersion
 from core.config import v3 as config
 from ...utils.logger import logger

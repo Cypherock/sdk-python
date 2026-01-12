@@ -7,7 +7,7 @@ from util.utils.crypto import uint8array_to_hex
 from util.utils.sleep import sleep
 from ...utils.logger import logger
 from ...utils.packetversion import PacketVersion, PacketVersionMap
-from ...encoders.proto.generated.core import CmdState, DeviceIdleState, Status
+from ...encoders.proto.generated.core_pb2 import CmdState, DeviceIdleState, Status
 from .getresult import get_result
 
 

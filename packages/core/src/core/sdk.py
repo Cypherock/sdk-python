@@ -23,7 +23,7 @@ from .deprecated import DeprecatedCommunication
 from .encoders.proto.types import DeviceIdleState
 from .encoders.raw.types import DeviceIdleState as RawDeviceIdleState
 from .utils.logger import logger
-from .encoders.proto.generated.core import AppVersionResultResponse
+from .encoders.proto.generated.version_pb2 import AppVersionResultResponse
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
 
 

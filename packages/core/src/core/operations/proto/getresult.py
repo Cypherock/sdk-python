@@ -5,7 +5,8 @@ from util.utils.assert_utils import assert_condition
 from util.utils.crypto import hex_to_uint8array
 from ...utils.packetversion import PacketVersion
 from ...operations.helpers.getcommandoutput import get_command_output
-from ...encoders.proto.generated.core import Status, Msg, ErrorType
+from ...encoders.proto.generated import core_pb2
+from ...encoders.proto.generated.core_pb2 import Status, Msg, ErrorType
 
 
 async def get_result(
@@ -40,24 +41,23 @@ async def get_result(
 
     if is_status:
         print("parsing status")
-        status = Status().parse(hex_to_uint8array(protobuf_data))
+        status = Status()
+        status.ParseFromString(hex_to_uint8array(protobuf_data))
         print("status", status)
         if status.current_cmd_seq != sequence_number:
             raise DeviceAppError(DeviceAppErrorType.EXECUTING_OTHER_COMMAND)
         output = status
     else:
-        # Parse Msg; support both class and instance parse styles across betterproto versions
+        # Parse Msg using standard protobuf
         print("parsing msg")
-        try:
-            msg = Msg.parse(hex_to_uint8array(protobuf_data))
-        except TypeError:
-            msg = Msg().parse(hex_to_uint8array(protobuf_data))
+        msg = Msg()
+        msg.ParseFromString(hex_to_uint8array(protobuf_data))
         print("msg", msg)
 
-        # Determine which oneof is set and route accordingly
+        # Determine which oneof is set - check each field in the oneof
         active_field = None
         try:
-            active_field, _ = msg.which_one_of("type")
+            active_field = msg.WhichOneof("type")
         except Exception:
             active_field = None
         if not active_field:

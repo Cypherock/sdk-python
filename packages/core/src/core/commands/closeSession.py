@@ -1,7 +1,7 @@
 from typing import Optional, Callable, Dict, Any, Awaitable
 from interfaces import IDeviceConnection
-from ..encoders.proto.generated.core import (
-    Msg,
+from ..encoders.proto.generated.core_pb2 import Msg
+from ..encoders.proto.generated.session_pb2 import (
     SessionCloseCmd,
     SessionCloseRequest,
     SessionCloseClearRequest,
@@ -44,7 +44,7 @@ async def send_session_command(params: CloseSessionParams):
     max_tries = params.options.get("maxTries")
     timeout = params.options.get("timeout")
     msg = build_session_close_msg()
-    msg_data = uint8array_to_hex(bytes(msg))
+    msg_data = uint8array_to_hex(msg.SerializeToString())
     await send_command(
         connection=params.connection,
         proto_data=msg_data,
@@ -68,7 +68,8 @@ async def wait_for_session_result(params: CloseSessionParams) -> SessionCloseRes
         options=params.options,
     )
     try:
-        msg = Msg.parse(result)
+        msg = Msg()
+        msg.ParseFromString(result)
     except Exception:
         raise DeviceAppError(DeviceAppErrorType.INVALID_MSG_FROM_DEVICE)
     response = (

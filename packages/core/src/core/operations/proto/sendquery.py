@@ -4,7 +4,7 @@ from util.utils.assert_utils import assert_condition
 from util.utils.crypto import uint8array_to_hex
 from ...utils.logger import logger
 from ...utils.packetversion import PacketVersion
-from ...encoders.proto.generated.core import Msg, Command
+from ...encoders.proto.generated.core_pb2 import Msg, Command
 from ...operations.helpers.sendcommand import send_command as send_command_helper
 
 
@@ -26,9 +26,8 @@ async def send_query(
     raw_data = uint8array_to_hex(data)
     logger.debug('Sending query', {'appletId': applet_id, 'rawData': raw_data})
 
-    msg_data = uint8array_to_hex(
-        bytes(Msg(cmd=Command(applet_id=applet_id)))
-    )
+    msg = Msg(cmd=Command(applet_id=applet_id))
+    msg_data = uint8array_to_hex(msg.SerializeToString())
 
     return await send_command_helper(
         connection=connection,

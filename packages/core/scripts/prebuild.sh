@@ -13,7 +13,7 @@ mkdir -p src/core/encoders/proto/generated
 PYTHON_CMD="poetry run python3"
 
 # Step 1: Compile .proto files using betterproto (equivalent to protoc + ts-proto)
-protoc --python_betterproto_out=./src/core/encoders/proto/generated \
+protoc --python_out=./src/core/encoders/proto/generated \
     --proto_path="../../submodules/common/proto" \
     ../../submodules/common/proto/common.proto \
     ../../submodules/common/proto/core.proto \
@@ -21,5 +21,8 @@ protoc --python_betterproto_out=./src/core/encoders/proto/generated \
     ../../submodules/common/proto/session.proto \
     ../../submodules/common/proto/version.proto
 
-# Step 2: Extract and consolidate types (equivalent to extractTypes/index.js)
+# Step 2: Fix imports in generated files
+$PYTHON_CMD ../../scripts/fix_proto_imports.py ./src/core/encoders/proto/generated core
+
+# Step 3: Extract and consolidate types (equivalent to extractTypes/index.js)
 $PYTHON_CMD ../../scripts/extract_types/__init__.py ./src/core/encoders/proto/generated ./src/core/encoders/proto/generated/types.py

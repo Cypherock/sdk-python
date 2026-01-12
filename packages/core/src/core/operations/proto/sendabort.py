@@ -6,7 +6,7 @@ from util.utils.crypto import hex_to_uint8array
 from ...utils.packetversion import PacketVersion, PacketVersionMap
 from core.config import v3 as config
 from ...encoders.packet.packet import decode_payload_data, encode_packet
-from ...encoders.proto.generated.core import Status
+from ...encoders.proto.generated.core_pb2 import Status
 from ...operations.helpers.writecommand import write_command
 from ...operations.helpers.can_retry import can_retry
 from ...utils.logger import logger
@@ -67,7 +67,8 @@ async def send_abort(
                 version,
             )
             protobuf_data = payload_data_result['protobuf_data']
-            status = Status.parse(hex_to_uint8array(protobuf_data))
+            status = Status()
+            status.ParseFromString(hex_to_uint8array(protobuf_data))
 
             if status.current_cmd_seq != sequence_number:
                 raise DeviceAppError(DeviceAppErrorType.EXECUTING_OTHER_COMMAND)

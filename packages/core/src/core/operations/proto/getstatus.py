@@ -4,7 +4,7 @@ from util.utils.crypto import hex_to_uint8array
 from ...utils.logger import logger
 from ...utils.packetversion import PacketVersion
 from ...operations.helpers.getstatus import get_status as get_status_helper
-from ...encoders.proto.generated.core import Status
+from ...encoders.proto.generated.core_pb2 import Status
 
 
 async def get_status(
@@ -22,15 +22,14 @@ async def get_status(
     )
 
     protobuf_data = result["protobuf_data"]
-    # Some betterproto versions expose parse as an instance method
-    try:
-        status = Status.parse(hex_to_uint8array(protobuf_data))
-    except TypeError:
-        status = Status().parse(hex_to_uint8array(protobuf_data))
+    # Parse using standard protobuf
+    status = Status()
+    status.ParseFromString(hex_to_uint8array(protobuf_data))
 
     if not dont_log:
         try:
-            meta = {'status': status.to_dict()}
+            # Standard protobuf doesn't have to_dict(), use str representation
+            meta = {'status': str(status)}
         except Exception:
             meta = {'status': str(status)}
         logger.debug('Received status', meta)
