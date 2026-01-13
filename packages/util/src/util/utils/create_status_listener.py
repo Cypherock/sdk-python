@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional, Callable, List, TypedDict, Type
 from enum import Enum
+from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 from interfaces.logger import ILogger
 from .crypto import num_to_byte_array
 
@@ -17,21 +18,35 @@ class CreateStatusListenerParams(TypedDict):
 
 
 def get_numbers_from_enums(enums: Type[Enum]) -> List[int]:
-    return sorted(
-        [
+    try:
+        return [
             member.value
             for member in enums
             if isinstance(member.value, int) and member.value >= 0
         ]
-    )
-
+    except Exception as e:
+        return enums.values()
 
 def get_names_from_enums(enums: Type[Enum]) -> List[str]:
-    return [member.name for member in enums]
+    try:
+        return [member.name for member in enums]
+    except Exception as e:
+        return enums.keys()
 
+def create_dict_from_enums(enums: Type[Enum]) -> Dict[str, int]:
+    values = get_numbers_from_enums(enums)
+    keys = get_names_from_enums(enums)
+    return dict(zip(keys, values))
+
+def get_numbers_from_dict(enums: Dict[str, int]) -> List[int]:
+    return list(enums.values())
+
+def get_names_from_dict(enums: Dict[str, int]) -> List[str]:
+    return list(enums.keys())
 
 def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]:
     enums: Type[Enum] = params["enums"]
+    enum_dict: Dict[str, int] = create_dict_from_enums(enums)
     on_event: Optional[EventCallback] = params.get("onEvent")
     logger: Optional[ILogger] = params.get("logger")
     _operation_enums: Optional[Type[Enum]] = params.get("operationEnums")
@@ -42,18 +57,18 @@ def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]
     )
     already_sent: Dict[int, bool] = {}
 
-    event_list = get_numbers_from_enums(enums)
+    event_list = get_numbers_from_dict(enum_dict)
     seed_generation_event_list = (
         get_numbers_from_enums(seed_generation_enums) if seed_generation_enums else []
     )
-    operation_event_names = get_names_from_enums(operation_enums)
+    operation_event_names = get_names_from_dict(enum_dict)
 
     operation_seed_generation_event_name: Optional[str] = next(
         (e for e in operation_event_names if "SEED_GENERATED" in e), None
     )
 
     def on_status(status: Dict[str, int]) -> None:
-        flow_status = status.get("flowStatus", 0)
+        flow_status = getattr(status, "flow_status", 0)
         byte_array = num_to_byte_array(flow_status)
         operation_status = byte_array[-1] if byte_array else 0
         core_status = byte_array[-2] if len(byte_array) > 1 else 0
@@ -100,9 +115,9 @@ def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]
                 if logger:
                     event_name = next(
                         (
-                            member.name
-                            for member in enums
-                            if member.value == event_index
+                            key
+                            for key, value in enum_dict.items()
+                            if value == event_index
                         ),
                         str(event_index),
                     )
@@ -122,9 +137,9 @@ def create_status_listener(params: CreateStatusListenerParams) -> Dict[str, Any]
                     # Find the enum member name corresponding to the event_index
                     event_name = next(
                         (
-                            member.name
-                            for member in enums
-                            if member.value == event_index
+                            key
+                            for key, value in enum_dict.items()
+                            if value == event_index
                         ),
                         str(event_index),
                     )

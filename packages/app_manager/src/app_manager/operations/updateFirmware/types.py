@@ -1,6 +1,6 @@
 from typing import Callable, Optional, Protocol
 from interfaces import IDevice, IDeviceConnection
-from core.encoders.proto.generated.common import Version
+from core.encoders.proto.generated.common_pb2 import Version
 from app_manager.proto.types import UpdateFirmwareStatus
 
 # Re-export types

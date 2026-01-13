@@ -13,7 +13,7 @@ mkdir -p src/app_manager/proto/generated
 # Use poetry run python3 to ensure we use the root environment with betterproto
 PYTHON_CMD="poetry run python3"
 
-protoc --python_betterproto_out=./src/app_manager/proto/generated \
+protoc --python_out=./src/app_manager/proto/generated \
     --proto_path="../../submodules/common/proto" \
     ../../submodules/common/proto/manager/common.proto \
     ../../submodules/common/proto/manager/core.proto \
@@ -23,6 +23,10 @@ protoc --python_betterproto_out=./src/app_manager/proto/generated \
     ../../submodules/common/proto/manager/get_wallets.proto \
     ../../submodules/common/proto/manager/train_card.proto \
     ../../submodules/common/proto/manager/train_joystick.proto \
-    ../../submodules/common/proto/manager/wallet_selector.proto
+    ../../submodules/common/proto/manager/wallet_selector.proto \
+    ../../submodules/common/proto/manager/auth_device.proto \
+    ../../submodules/common/proto/manager/auth_card.proto
+# Fix imports in generated files
+$PYTHON_CMD ../../scripts/fix_proto_imports.py ./src/app_manager/proto/generated manager
 
 $PYTHON_CMD ../../scripts/extract_types/__init__.py ./src/app_manager/proto/generated ./src/app_manager/proto/generated/types.py

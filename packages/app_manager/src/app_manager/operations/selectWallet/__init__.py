@@ -1,7 +1,7 @@
 from core.types import ISDK
 from util.utils import create_logger_with_prefix
 from app_manager.constants.appId import APP_VERSION
-from app_manager.proto.generated.manager import SelectWalletResultResponse
+from app_manager.proto.generated.manager.wallet_selector_pb2 import SelectWalletResultResponse
 from ...utils import assert_or_throw_invalid_result, OperationHelper
 from ...utils import logger as rootlogger
 
@@ -13,11 +13,11 @@ async def select_wallet(sdk: ISDK) -> SelectWalletResultResponse:
 
     await sdk.check_app_compatibility(APP_VERSION)
 
-    helper = OperationHelper(sdk, "selectWallet", "selectWallet")
+    helper = OperationHelper(sdk, "select_wallet", "select_wallet")
 
     await helper.send_query({"initiate": {}})
     result = await helper.wait_for_result()
-    logger.verbose("SelectWalletResponse", result)
+    logger.verbose("SelectWalletResponse", {"result": result})
     assert_or_throw_invalid_result(result.result)
 
     logger.info("Completed")

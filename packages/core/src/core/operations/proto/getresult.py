@@ -54,7 +54,7 @@ async def get_result(
         msg.ParseFromString(hex_to_uint8array(protobuf_data))
         print("msg", msg)
 
-        # Determine which oneof is set - check each field in the oneof
+        # Determine which oneof is set and route accordingly
         active_field = None
         try:
             active_field = msg.WhichOneof("type")
