@@ -2,8 +2,8 @@ from core.types import ISDK
 from util.utils import create_status_listener, create_logger_with_prefix
 from util.utils.assert_utils import assert_condition
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
-from ...proto.generated.btc import GetPublicKeyStatus
-from ...proto.generated.common import SeedGenerationStatus
+from ...proto.generated.btc.get_public_key_pb2 import GetPublicKeyStatus
+from ...proto.generated.common_pb2 import SeedGenerationStatus
 from ...utils import (
     assert_or_throw_invalid_result,
     OperationHelper,
@@ -71,7 +71,7 @@ async def get_public_key(
 
     helper = OperationHelper(
         sdk=sdk,
-        query_key="getPublicKey",
+        query_key="get_public_key",
         result_key="get_public_key",
         on_status=on_status,
     )

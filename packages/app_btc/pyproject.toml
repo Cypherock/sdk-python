@@ -21,7 +21,7 @@ httpx = "^0.24.0"
 cryptography = "^41.0.0"
 # Protobuf
 betterproto = "^1.2.5"
-protobuf = "^4.24.0"
+protobuf = "^6.0.0"
 semver = "^3.0.4"
 
 

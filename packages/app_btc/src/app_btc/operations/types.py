@@ -9,7 +9,7 @@ from .getXpubs.types import (
     GetXpubsEventHandler,
     GetXpubsParams,
 )
-from ..proto.generated.btc import GetXpubsResultResponse
+from ..proto.generated.btc.get_xpubs_pb2 import GetXpubsResultResponse
 from .signTxn.types import (
     SignTxnEvent,
     SignTxnEventHandler,

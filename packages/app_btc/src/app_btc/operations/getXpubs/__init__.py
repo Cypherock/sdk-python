@@ -1,8 +1,8 @@
 from core.types import ISDK
 from util.utils import create_status_listener, create_logger_with_prefix
 from util.utils.assert_utils import assert_condition
-from ...proto.generated.btc import GetXpubsStatus, GetXpubsResultResponse
-from ...proto.generated.common import SeedGenerationStatus
+from ...proto.generated.btc.get_xpubs_pb2 import GetXpubsStatus, GetXpubsResultResponse
+from ...proto.generated.common_pb2 import SeedGenerationStatus
 from ...utils import (
     assert_or_throw_invalid_result,
     OperationHelper,
@@ -69,8 +69,8 @@ async def get_xpubs(
 
     helper = OperationHelper(
         sdk=sdk,
-        query_key="getXpubs",
-        result_key="getXpubs",
+        query_key="get_xpubs",
+        result_key="get_xpubs",
         on_status=on_status,
     )
 

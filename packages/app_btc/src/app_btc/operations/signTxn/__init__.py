@@ -7,8 +7,8 @@ from util.utils import (
     hex_to_uint8array,
     uint8array_to_hex,
 )
-from ...proto.generated.btc import SignTxnStatus
-from ...proto.generated.common import SeedGenerationStatus
+from ...proto.generated.btc.sign_txn_pb2 import SignTxnStatus
+from ...proto.generated.common_pb2 import SeedGenerationStatus
 from ...utils import (
     assert_or_throw_invalid_result,
     OperationHelper,
@@ -75,8 +75,8 @@ async def sign_txn(
 
     helper = OperationHelper(
         sdk=sdk,
-        query_key="signTxn",
-        result_key="signTxn",
+        query_key="sign_txn",
+        result_key="sign_txn",
         on_status=on_status,
     )
 
