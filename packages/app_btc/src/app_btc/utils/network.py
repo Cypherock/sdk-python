@@ -13,6 +13,7 @@ HARDENED_BASE = 0x80000000
 
 LEGACY_PURPOSE = HARDENED_BASE + 44
 SEGWIT_PURPOSE = HARDENED_BASE + 84
+NESTED_SEGWIT_PURPOSE = HARDENED_BASE + 49
 
 BITCOIN_COIN_INDEX = HARDENED_BASE + 0
 TESTNET_COIN_INDEX = HARDENED_BASE + 1
@@ -98,11 +99,12 @@ coin_index_to_network_map: Dict[int, Optional[NetworkConfig]] = {
     DASH_COIN_INDEX: dash,
 }
 
-PurposeType = Literal["segwit", "legacy"]
+PurposeType = Literal["segwit", "legacy", "nested_segwit"]
 
 purpose_map: Dict[int, Optional[PurposeType]] = {
     SEGWIT_PURPOSE: "segwit",
     LEGACY_PURPOSE: "legacy",
+    NESTED_SEGWIT_PURPOSE: "nested_segwit",
 }
 
 coin_index_to_coin_type_map: Dict[int, Optional[str]] = {
@@ -137,7 +139,7 @@ def get_coin_type_from_path(path: List[int]) -> str:
 
 
 supported_purpose_map: Dict[int, Optional[List[PurposeType]]] = {
-    BITCOIN_COIN_INDEX: ["legacy", "segwit"],
+    BITCOIN_COIN_INDEX: ["legacy", "segwit", "nested_segwit"],
     LITECOIN_COIN_INDEX: ["legacy", "segwit"],
     DOGECOIN_COIN_INDEX: ["legacy"],
     DASH_COIN_INDEX: ["legacy"],

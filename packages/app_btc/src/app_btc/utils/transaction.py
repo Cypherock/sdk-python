@@ -21,6 +21,8 @@ def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
         script_pubkey = f"a914{addr_obj.hash_bytes.hex()}87"
     elif addr_obj.script_type == "p2pkh":
         script_pubkey = f"76a914{addr_obj.hash_bytes.hex()}88ac"
+    elif addr_obj.script_type == "p2sh":
+        script_pubkey = f"a914{addr_obj.hash_bytes.hex()}87"
     else:
         raise ValueError(f"Unsupported address type: {addr_obj.script_type}")
 
@@ -29,6 +31,9 @@ def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
 
 def is_script_segwit(script: str) -> bool:
     return script.startswith("0014")
+
+def is_script_nested_segwit(script: str) -> bool:
+    return script.startswith("a914") and script.endswith("87") and len(script) == 46
 
 
 def create_signed_transaction(params: Dict[str, Any]) -> str:
@@ -90,13 +95,13 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
         #     txn_input["witness_type"] = "segwit"
         #     txn_input["script_type"] = "p2wpkh"
         # else:
-            if hasattr(input_data, "prev_txn"):
-                prev_txn = input_data.prev_txn
-            else:
-                prev_txn = input_data.get("prevTxn")
-            assert_condition(prev_txn, "prevTxn is required in input")
-            txn_input["unlocking_script"] = prev_txn
-            txn_input["script_type"] = "p2pkh"
+            # if hasattr(input_data, "prev_txn"):
+            #     prev_txn = input_data.prev_txn
+            # else:
+            #     prev_txn = input_data.get("prevTxn")
+            # assert_condition(prev_txn, "prevTxn is required in input")
+            # txn_input["unlocking_script"] = prev_txn
+            # txn_input["script_type"] = "p2pkh"
 
         transaction.add_input(
             prev_txid=prev_txn_id,
@@ -104,7 +109,8 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
             value=int(value),
             address=address,
             keys=k.public_hex if k else None,
-            signatures=signature_bytes if signature_bytes else None
+            signatures=signature_bytes if signature_bytes else None,
+            witness_type="p2sh-segwit" if is_script_nested_segwit(script) else None
         )
 
     print("###############outputs######################\n\n")

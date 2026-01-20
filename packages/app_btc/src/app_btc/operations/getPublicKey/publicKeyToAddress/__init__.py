@@ -35,12 +35,20 @@ def get_address_from_public_key(uncompressed_public_key: bytes, path: List[int])
     network_config = get_network_from_path(path)
     network = "bitcoin" if network_config.pub_key_hash == 0 else "testnet"
 
+    from bitcoinlib.keys import Address
+    
+
     purpose_type = get_purpose_type(path)
 
     if purpose_type == "segwit":
         result = bitcoin_py_lib.payments.p2wpkh(compressed_public_key, network)
-    else:
+    elif purpose_type == "legacy":
         result = bitcoin_py_lib.payments.p2pkh(compressed_public_key, network)
+    elif purpose_type == "nested_segwit":
+        address = Address(compressed_public_key, network=network, script_type="p2sh", witness_type="p2sh-segwit").address
+        result = {"address": address}
+    else:
+        raise ValueError(f"Unsupported purpose type: {purpose_type}")
 
     address = result["address"]
     assert address, "Could not derive address"
