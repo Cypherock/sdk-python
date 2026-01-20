@@ -112,12 +112,15 @@ async def sign_txn(
     for i, input_data in enumerate(params.txn.inputs):
         prev_txn_hash = bytes.fromhex(input_data.prev_txn_id)[::-1].hex()
 
-        prev_txn = input_data.prev_txn or await get_raw_txn_hash(
-            {
-                "hash": input_data.prev_txn_id,
-                "coin_type": get_coin_type_from_path(params.derivation_path),
-            }
-        )
+        if input_data.prev_txn is not None:
+            prev_txn = input_data.prev_txn
+        else:
+            prev_txn = get_raw_txn_hash(
+                {
+                    "hash": input_data.prev_txn_id,
+                    "coinType": get_coin_type_from_path(params.derivation_path),
+                }
+            )
         inputs[i].prev_txn = prev_txn
 
         await helper.send_query(
@@ -130,7 +133,7 @@ async def sign_txn(
                             input_data.address, params.derivation_path
                         )
                     ),
-                    "value": input_data.value,
+                    "value": int(input_data.value),
                     "sequence": input_data.sequence
                     or SIGN_TXN_DEFAULT_PARAMS["input"]["sequence"],
                     "change_index": input_data.change_index,
@@ -156,7 +159,7 @@ async def sign_txn(
                             output.address, params.derivation_path
                         )
                     ),
-                    "value": output.value,
+                    "value": int(output.value),
                     "is_change": output.is_change,
                     "changes_index": output.address_index,
                 }
