@@ -9,6 +9,7 @@ from ...utils import (
     logger as root_logger,
     configure_app_id,
     assert_derivation_path,
+    get_purpose_type,
 )
 from .types import GetXpubsEvent, GetXpubsParams
 
@@ -89,4 +90,13 @@ async def get_xpubs(
 
     force_status_update(GetXpubsEvent.PIN_CARD)
 
-    return GetXpubsResultResponse(xpubs=result.result.xpubs)
+    return GetXpubsResultResponse(
+        xpubs=[
+            (
+                f"tr({xpub})"
+                if get_purpose_type(params.derivation_paths[i]["path"]) == "taproot"
+                else xpub
+            )
+            for i, xpub in enumerate(result.result.xpubs)
+        ]
+    )
