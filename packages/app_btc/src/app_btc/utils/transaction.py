@@ -23,6 +23,8 @@ def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
         script_pubkey = f"76a914{addr_obj.hash_bytes.hex()}88ac"
     elif addr_obj.script_type == "p2sh":
         script_pubkey = f"a914{addr_obj.hash_bytes.hex()}87"
+    elif addr_obj.script_type == "p2tr":
+        script_pubkey = f"5120{addr_obj.hash_bytes.hex()}"
     else:
         raise ValueError(f"Unsupported address type: {addr_obj.script_type}")
 

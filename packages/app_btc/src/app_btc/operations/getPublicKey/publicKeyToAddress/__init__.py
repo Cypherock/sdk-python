@@ -1,7 +1,10 @@
 from typing import List
 from coincurve import PublicKey
 from ....utils import get_bitcoin_py_lib, get_network_from_path, get_purpose_type
+from bitcoinutils.keys import PublicKey as BitcoinPublicKey
+from bitcoinutils.setup import setup
 
+setup("mainnet")
 
 def get_address_from_public_key(uncompressed_public_key: bytes, path: List[int]) -> str:
     """
@@ -46,6 +49,9 @@ def get_address_from_public_key(uncompressed_public_key: bytes, path: List[int])
         result = bitcoin_py_lib.payments.p2pkh(compressed_public_key, network)
     elif purpose_type == "nested_segwit":
         address = Address(compressed_public_key, network=network, script_type="p2sh", witness_type="p2sh-segwit").address
+        result = {"address": address}
+    elif purpose_type == "taproot":
+        address = BitcoinPublicKey(compressed_public_key.hex()).get_taproot_address().to_string()
         result = {"address": address}
     else:
         raise ValueError(f"Unsupported purpose type: {purpose_type}")
