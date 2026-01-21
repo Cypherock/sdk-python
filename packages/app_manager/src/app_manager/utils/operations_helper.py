@@ -43,6 +43,7 @@ def encode_query(query_data: Dict[str, Any]) -> bytes:
     query = Query(**query_data)
     return query.SerializeToString()
 
+
 class OperationHelper(Generic[Q, R]):
     """
     Helper class for managing device operations with typed query and result handling.

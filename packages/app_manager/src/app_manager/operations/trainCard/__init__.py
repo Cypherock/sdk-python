@@ -1,7 +1,10 @@
 from core.types import ISDK
 from util.utils import create_logger_with_prefix, create_status_listener
 from app_manager.constants.appId import APP_VERSION
-from app_manager.proto.generated.manager.train_card_pb2 import TrainCardResult, TrainCardStatus
+from app_manager.proto.generated.manager.train_card_pb2 import (
+    TrainCardResult,
+    TrainCardStatus,
+)
 from ...utils import assert_or_throw_invalid_result, OperationHelper
 from ...utils import logger as rootlogger
 from .types import ITrainCardParams, TrainCardEventHandler

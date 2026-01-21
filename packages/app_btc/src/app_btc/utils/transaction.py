@@ -6,8 +6,14 @@ from bitcoinlib.encoding import convert_der_sig
 from bitcoinlib.keys import Address
 from util.utils.crypto import hex_to_uint8array
 from bitcoinutils.setup import setup
-from bitcoinutils.transactions import Transaction as UtilTransaction, TxInput, TxOutput, TxWitnessInput
+from bitcoinutils.transactions import (
+    Transaction as UtilTransaction,
+    TxInput,
+    TxOutput,
+    TxWitnessInput,
+)
 from bitcoinutils.script import Script
+
 
 def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
     network = get_network_from_path(derivation_path)
@@ -30,8 +36,10 @@ def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
 
     return script_pubkey
 
+
 def is_script_segwit(script: str) -> bool:
     return script.startswith("0014")
+
 
 def is_script_nested_segwit(script: str) -> bool:
     return script.startswith("a914") and script.endswith("87") and len(script) == 46
@@ -42,25 +50,31 @@ def create_taproot_transaction(params: Dict[str, Any]) -> str:
     outputs = params["outputs"]
     signatures = params["signatures"]
     derivation_path = params["derivation_path"]
-    
+
     network = get_network_from_path(derivation_path)
     network_name = "mainnet" if network.pub_key_hash == 0 else "testnet"
     setup(network_name)
 
     txn_inputs = []
     for input_data in inputs:
-        txn_inputs.append(TxInput(
-            input_data.prev_txn_id,
-            input_data.prev_index,
-            sequence=str(input_data.sequence or "ffffffff")
-        ))
+        txn_inputs.append(
+            TxInput(
+                input_data.prev_txn_id,
+                input_data.prev_index,
+                sequence=str(input_data.sequence or "ffffffff"),
+            )
+        )
 
     txn_outputs = []
     for output_data in outputs:
-        txn_outputs.append(TxOutput(
-            int(output_data.value),
-            Script.from_raw(address_to_script_pub_key(output_data.address, derivation_path))
-        ))
+        txn_outputs.append(
+            TxOutput(
+                int(output_data.value),
+                Script.from_raw(
+                    address_to_script_pub_key(output_data.address, derivation_path)
+                ),
+            )
+        )
 
     txn = UtilTransaction(txn_inputs, txn_outputs, has_segwit=True)
 
@@ -117,7 +131,6 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
             k = None
             signature_bytes = None
 
-
         # txn_input = {
         #     "prev_txid": prev_txn_id,
         #     "output_n": prev_index,
@@ -145,7 +158,7 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
             address=address,
             keys=k.public_hex if k else None,
             signatures=signature_bytes if signature_bytes else None,
-            witness_type="p2sh-segwit" if is_script_nested_segwit(script) else None
+            witness_type="p2sh-segwit" if is_script_nested_segwit(script) else None,
         )
 
     for output in outputs:

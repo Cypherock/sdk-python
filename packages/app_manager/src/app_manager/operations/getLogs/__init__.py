@@ -52,6 +52,7 @@ async def get_logs(
     )
     on_status = status_listener["onStatus"]
     force_status_update = status_listener["forceStatusUpdate"]
+
     # ASCII decoder for log data
     def decode_ascii(data: bytes) -> str:
         return data.decode("ascii", errors="replace")
@@ -64,7 +65,7 @@ async def get_logs(
 
     while True:
         result = await fetch_logs_data(helper, on_status)
-        
+
         if not is_confirmed:
             force_status_update(GetLogsStatus.GET_LOGS_STATUS_USER_CONFIRMED)
 

@@ -7,7 +7,7 @@ from .waitforidle import wait_for_idle
 
 __all__ = [
     "get_status",
-    "get_result", 
+    "get_result",
     "send_query",
     "wait_for_result",
     "send_abort",

@@ -4,7 +4,6 @@ from ..utils.http import http
 base_url = "/v2/transaction"
 
 
-
 def get_raw_txn_hash(params: Dict[str, str]) -> str:
     """
     Get raw transaction hash from the API.

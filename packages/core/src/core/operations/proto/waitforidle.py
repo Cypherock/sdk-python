@@ -1,7 +1,10 @@
 from typing import Optional
 import asyncio
 from interfaces import IDeviceConnection
-from interfaces.errors.connection_error import DeviceConnectionError, DeviceConnectionErrorType
+from interfaces.errors.connection_error import (
+    DeviceConnectionError,
+    DeviceConnectionErrorType,
+)
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
 from ...encoders.proto.generated.core_pb2 import DeviceIdleState
 from ...utils.packetversion import PacketVersion
@@ -17,7 +20,7 @@ async def wait_for_idle(
 ) -> None:
     async def promise_executor():
         try:
-            logger.debug('Waiting for device to be idle')
+            logger.debug("Waiting for device to be idle")
             is_completed = False
 
             usable_config = config
@@ -61,22 +64,34 @@ async def wait_for_idle(
                         dont_log=True,
                     )
 
-                    if status.device_idle_state != DeviceIdleState.DEVICE_IDLE_STATE_USB:
+                    if (
+                        status.device_idle_state
+                        != DeviceIdleState.DEVICE_IDLE_STATE_USB
+                    ):
                         clean_up()
                         return
 
                     set_recheck_timeout()
                 except Exception as error:
-                    if hasattr(error, 'code') and error.code in [e.value for e in DeviceConnectionErrorType]:
+                    if hasattr(error, "code") and error.code in [
+                        e.value for e in DeviceConnectionErrorType
+                    ]:
                         clean_up()
                         raise error
 
-                    logger.error('Error while rechecking if idle')
+                    logger.error("Error while rechecking if idle")
                     logger.error(error)
                     set_recheck_timeout()
 
             async def timeout_handler():
-                await asyncio.sleep((timeout if timeout is not None else usable_config.constants.IDLE_TIMEOUT) / 1000)
+                await asyncio.sleep(
+                    (
+                        timeout
+                        if timeout is not None
+                        else usable_config.constants.IDLE_TIMEOUT
+                    )
+                    / 1000
+                )
                 clean_up()
 
                 if not await connection.is_connected():

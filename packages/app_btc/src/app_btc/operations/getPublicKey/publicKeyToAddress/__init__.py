@@ -3,6 +3,7 @@ from ....utils import get_network_from_path, get_purpose_type
 from bitcoinutils.keys import PublicKey as BitcoinPublicKey, P2shAddress
 from bitcoinutils.setup import setup
 
+
 def get_address_from_public_key(uncompressed_public_key: bytes, path: List[int]) -> str:
     """
     1. Get the purpose type from the derivation path
@@ -33,7 +34,9 @@ def get_address_from_public_key(uncompressed_public_key: bytes, path: List[int])
     elif purpose_type == "segwit":
         address = pubkey.get_segwit_address()
     elif purpose_type == "nested_segwit":
-        address = P2shAddress.from_script(pubkey.get_segwit_address().to_script_pub_key())
+        address = P2shAddress.from_script(
+            pubkey.get_segwit_address().to_script_pub_key()
+        )
     elif purpose_type == "taproot":
         address = pubkey.get_taproot_address()
     else:

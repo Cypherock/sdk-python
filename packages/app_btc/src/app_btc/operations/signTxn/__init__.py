@@ -101,7 +101,12 @@ async def sign_txn(
                 "locktime": params.txn.locktime or SIGN_TXN_DEFAULT_PARAMS["locktime"],
                 "input_count": len(params.txn.inputs),
                 "output_count": len(params.txn.outputs),
-                "sighash": params.txn.hash_type or (0 if get_purpose_type(params.derivation_path) == "taproot" else SIGN_TXN_DEFAULT_PARAMS["hashtype"]),
+                "sighash": params.txn.hash_type
+                or (
+                    0
+                    if get_purpose_type(params.derivation_path) == "taproot"
+                    else SIGN_TXN_DEFAULT_PARAMS["hashtype"]
+                ),
             }
         }
     )

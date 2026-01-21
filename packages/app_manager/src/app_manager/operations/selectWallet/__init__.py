@@ -1,7 +1,9 @@
 from core.types import ISDK
 from util.utils import create_logger_with_prefix
 from app_manager.constants.appId import APP_VERSION
-from app_manager.proto.generated.manager.wallet_selector_pb2 import SelectWalletResultResponse
+from app_manager.proto.generated.manager.wallet_selector_pb2 import (
+    SelectWalletResultResponse,
+)
 from ...utils import assert_or_throw_invalid_result, OperationHelper
 from ...utils import logger as rootlogger
 

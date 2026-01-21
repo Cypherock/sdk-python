@@ -25,6 +25,7 @@ def assert_or_throw_invalid_result(condition: T) -> T:
     )
     return condition
 
+
 def parse_common_error(error: Optional[CommonError]) -> None:
     """
     Parse common error and raise appropriate DeviceAppError.
