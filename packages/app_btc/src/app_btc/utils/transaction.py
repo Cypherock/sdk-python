@@ -1,17 +1,17 @@
 from typing import List, Dict, Any
 from ..utils.bitcoinlib import get_bitcoin_py_lib
-from ..utils.network import get_network_from_path
+from ..utils.network import get_network_from_path, get_purpose_type
 from util.utils.assert_utils import assert_condition
 from bitcoinlib.encoding import convert_der_sig
+from bitcoinlib.keys import Address
 from util.utils.crypto import hex_to_uint8array
-
+from bitcoinutils.setup import setup
+from bitcoinutils.transactions import Transaction as UtilTransaction, TxInput, TxOutput, TxWitnessInput
+from bitcoinutils.script import Script
 
 def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
-    _ = get_bitcoin_py_lib()
     network = get_network_from_path(derivation_path)
     network_name = "bitcoin" if network.pub_key_hash == 0 else "testnet"
-
-    from bitcoinlib.keys import Address
 
     addr_obj = Address.parse(address, network=network_name)
 
@@ -30,12 +30,44 @@ def address_to_script_pub_key(address: str, derivation_path: List[int]) -> str:
 
     return script_pubkey
 
-
 def is_script_segwit(script: str) -> bool:
     return script.startswith("0014")
 
 def is_script_nested_segwit(script: str) -> bool:
     return script.startswith("a914") and script.endswith("87") and len(script) == 46
+
+
+def create_taproot_transaction(params: Dict[str, Any]) -> str:
+    inputs = params["inputs"]
+    outputs = params["outputs"]
+    signatures = params["signatures"]
+    derivation_path = params["derivation_path"]
+    
+    network = get_network_from_path(derivation_path)
+    network_name = "mainnet" if network.pub_key_hash == 0 else "testnet"
+    setup(network_name)
+
+    txn_inputs = []
+    for input_data in inputs:
+        txn_inputs.append(TxInput(
+            input_data.prev_txn_id,
+            input_data.prev_index,
+            sequence=str(input_data.sequence or "ffffffff")
+        ))
+
+    txn_outputs = []
+    for output_data in outputs:
+        txn_outputs.append(TxOutput(
+            int(output_data.value),
+            Script.from_raw(address_to_script_pub_key(output_data.address, derivation_path))
+        ))
+
+    txn = UtilTransaction(txn_inputs, txn_outputs, has_segwit=True)
+
+    for signature in signatures:
+        txn.witnesses.append(TxWitnessInput([signature[:128]]))
+
+    return txn.serialize()
 
 
 def create_signed_transaction(params: Dict[str, Any]) -> str:
@@ -44,7 +76,10 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
     signatures = params["signatures"]
     derivation_path = params["derivation_path"]
 
-    _ = get_bitcoin_py_lib()
+    purpose_type = get_purpose_type(derivation_path)
+    if purpose_type == "taproot":
+        return create_taproot_transaction(params)
+
     network = get_network_from_path(derivation_path)
     network_name = "bitcoin" if network.pub_key_hash == 0 else "testnet"
 
@@ -52,8 +87,6 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
 
     transaction = Transaction(network=network_name, version=2)
 
-    # inputs = []
-    print("###############inputs######################\n\n")
     for i, input_data in enumerate(inputs):
         if hasattr(input_data, "address"):
             address = input_data.address
@@ -115,7 +148,6 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
             witness_type="p2sh-segwit" if is_script_nested_segwit(script) else None
         )
 
-    print("###############outputs######################\n\n")
     for output in outputs:
         if hasattr(output, "address"):
             address = output.address
@@ -126,7 +158,6 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
 
         transaction.add_output(address=address, value=int(value))
 
-    # print("###############signatures######################\n\n")
     # for i, signature in enumerate(signatures):
         # if not signature or signature == "":
         #     continue
@@ -145,7 +176,5 @@ def create_signed_transaction(params: Dict[str, Any]) -> str:
         # signature_bytes = bytes.fromhex(signature_hex)
         # _ = signature_bytes[:32]
         # _ = signature_bytes[32:64]
-        # print("###############signature######################\n\n")
-        # print(signature_hex)
         # transaction.sign(signature_hex, i)
     return transaction.raw_hex()

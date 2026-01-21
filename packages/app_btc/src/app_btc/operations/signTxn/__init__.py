@@ -18,6 +18,7 @@ from ...utils import (
     AppFeatures,
     address_to_script_pub_key,
     create_signed_transaction,
+    get_purpose_type,
 )
 from ...services.transaction import get_raw_txn_hash
 from .helpers import assert_sign_txn_params
@@ -100,7 +101,7 @@ async def sign_txn(
                 "locktime": params.txn.locktime or SIGN_TXN_DEFAULT_PARAMS["locktime"],
                 "input_count": len(params.txn.inputs),
                 "output_count": len(params.txn.outputs),
-                "sighash": params.txn.hash_type or SIGN_TXN_DEFAULT_PARAMS["hashtype"],
+                "sighash": params.txn.hash_type or (0 if get_purpose_type(params.derivation_path) == "taproot" else SIGN_TXN_DEFAULT_PARAMS["hashtype"]),
             }
         }
     )
