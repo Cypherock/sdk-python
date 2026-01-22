@@ -6,6 +6,8 @@ set -e
 # Ensure we're in the correct directory
 cd "$(dirname "$0")/.."
 
+rm -rf ./src/core/encoders/proto/generated/*.py || true
+
 # Create output directory
 mkdir -p src/core/encoders/proto/generated
 

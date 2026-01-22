@@ -25,7 +25,9 @@ protoc --python_out=./src/app_manager/proto/generated \
     ../../submodules/common/proto/manager/train_joystick.proto \
     ../../submodules/common/proto/manager/wallet_selector.proto \
     ../../submodules/common/proto/manager/auth_device.proto \
-    ../../submodules/common/proto/manager/auth_card.proto
+    ../../submodules/common/proto/manager/auth_card.proto \
+    ../../submodules/common/proto/error.proto \
+    ../../submodules/common/proto/common.proto
 # Fix imports in generated files
 $PYTHON_CMD ../../scripts/fix_proto_imports.py ./src/app_manager/proto/generated manager
 

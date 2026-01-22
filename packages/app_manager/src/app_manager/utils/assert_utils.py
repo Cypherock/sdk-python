@@ -1,7 +1,7 @@
 from typing import TypeVar, Optional
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
 from util.utils.assert_utils import assert_condition
-from core.encoders.proto.generated.error_pb2 import CommonError
+from app_manager.proto.generated.error_pb2 import CommonError
 
 T = TypeVar("T")
 

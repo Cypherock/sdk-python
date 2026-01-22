@@ -19,8 +19,9 @@ protoc --python_out=./src/app_btc/proto/generated \
     ../../submodules/common/proto/btc/error.proto \
     ../../submodules/common/proto/btc/get_public_key.proto \
     ../../submodules/common/proto/btc/get_xpubs.proto \
+    ../../submodules/common/proto/btc/sign_txn.proto \
     ../../submodules/common/proto/common.proto \
-    ../../submodules/common/proto/btc/sign_txn.proto
+    ../../submodules/common/proto/error.proto
 
 # protoc --python_out=./src/app_btc/proto/generated \
 #     --proto_path="../../submodules/common/proto" \

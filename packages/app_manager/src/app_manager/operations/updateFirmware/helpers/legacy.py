@@ -4,7 +4,7 @@ from interfaces.errors import (
     DeviceCompatibilityErrorType,
 )
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
-from core.encoders.proto.generated.common_pb2 import Version
+from app_manager.proto.generated.common_pb2 import Version
 
 
 def create_version_hex(version: Version) -> str:
