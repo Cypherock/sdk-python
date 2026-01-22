@@ -1,4 +1,5 @@
 """Test functions for ManagerApp operations."""
+
 import json
 from typing import Any
 
@@ -12,8 +13,7 @@ async def test_get_device_info(connection: IDeviceConnection) -> dict[str, Any]:
     try:
         app = await ManagerApp.create(connection)
         device_info = await app.get_device_info()
-        print(f"Device Info: {json.dumps(device_info.__dict__ if hasattr(device_info, '__dict__') else str(device_info), indent=2, default=str)}")
-        await app.destroy()
+        print(f"\n\nDevice Info:\n{device_info}")
         return {"success": True, "data": device_info}
     except Exception as e:
         print(f"Error: {e}")
@@ -26,8 +26,7 @@ async def test_get_wallets(connection: IDeviceConnection) -> dict[str, Any]:
     try:
         app = await ManagerApp.create(connection)
         wallets = await app.get_wallets()
-        print(f"Wallets: {json.dumps(wallets.__dict__ if hasattr(wallets, '__dict__') else str(wallets), indent=2, default=str)}")
-        await app.destroy()
+        print(f"\n\nWallets:\n{wallets}")
         return {"success": True, "data": wallets}
     except Exception as e:
         print(f"Error: {e}")
@@ -44,8 +43,7 @@ async def test_get_logs(connection: IDeviceConnection) -> dict[str, Any]:
             print(f"Log event: {event}")
 
         logs = await app.get_logs(on_event=on_event)
-        print(f"Logs: {json.dumps(logs.__dict__ if hasattr(logs, '__dict__') else str(logs), indent=2, default=str)}")
-        await app.destroy()
+        print(f"Logs:\n{logs}")
         return {"success": True, "data": logs}
     except Exception as e:
         print(f"Error: {e}")
@@ -58,8 +56,7 @@ async def test_select_wallet(connection: IDeviceConnection) -> dict[str, Any]:
     try:
         app = await ManagerApp.create(connection)
         result = await app.select_wallet()
-        print(f"Select wallet result: {json.dumps(result.__dict__ if hasattr(result, '__dict__') else str(result), indent=2, default=str)}")
-        await app.destroy()
+        print(f"\n\nSelect wallet result:\n{type(result.wallet.id)}")
         return {"success": True, "data": result}
     except Exception as e:
         print(f"Error: {e}")
@@ -73,9 +70,8 @@ async def test_get_sdk_version(connection: IDeviceConnection) -> dict[str, Any]:
         app = await ManagerApp.create(connection)
         version = app.get_sdk_version()
         print(f"SDK Version: {version}")
-        is_supported = app.is_supported()
+        is_supported = await app.is_supported()
         print(f"Is Supported: {is_supported}")
-        await app.destroy()
         return {"success": True, "version": version, "is_supported": is_supported}
     except Exception as e:
         print(f"Error: {e}")
@@ -105,4 +101,3 @@ async def run_all_manager_tests(connection: IDeviceConnection) -> dict[str, Any]
         print(f"{status} {test_name}: {result.get('success', False)}")
 
     return results
-
