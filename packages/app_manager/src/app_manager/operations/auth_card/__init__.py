@@ -11,7 +11,7 @@ from util.utils import (
 )
 
 from app_manager.constants.appId import APP_VERSION
-from app_manager.proto.generated.types import AuthCardStatus
+from app_manager.proto.generated.manager.auth_card_pb2 import AuthCardStatus
 from ...services import card_auth as card_auth_service
 from ...utils import (
     assert_or_throw_invalid_result,

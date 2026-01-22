@@ -1,14 +1,15 @@
 from core.types import ISDK
 from util.utils import create_status_listener, create_logger_with_prefix
 from util.utils.assert_utils import assert_condition
-from ...proto.generated.btc import GetXpubsStatus, GetXpubsResultResponse
-from ...proto.generated.common import SeedGenerationStatus
+from ...proto.generated.btc.get_xpubs_pb2 import GetXpubsStatus, GetXpubsResultResponse
+from ...proto.generated.common_pb2 import SeedGenerationStatus
 from ...utils import (
     assert_or_throw_invalid_result,
     OperationHelper,
     logger as root_logger,
     configure_app_id,
     assert_derivation_path,
+    get_purpose_type,
 )
 from .types import GetXpubsEvent, GetXpubsParams
 
@@ -69,8 +70,8 @@ async def get_xpubs(
 
     helper = OperationHelper(
         sdk=sdk,
-        query_key="getXpubs",
-        result_key="getXpubs",
+        query_key="get_xpubs",
+        result_key="get_xpubs",
         on_status=on_status,
     )
 
@@ -89,4 +90,13 @@ async def get_xpubs(
 
     force_status_update(GetXpubsEvent.PIN_CARD)
 
-    return GetXpubsResultResponse(xpubs=result.result.xpubs)
+    return GetXpubsResultResponse(
+        xpubs=[
+            (
+                f"tr({xpub})"
+                if get_purpose_type(params.derivation_paths[i]["path"]) == "taproot"
+                else xpub
+            )
+            for i, xpub in enumerate(result.result.xpubs)
+        ]
+    )

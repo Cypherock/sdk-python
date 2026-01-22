@@ -12,8 +12,8 @@ from typing import (
 from interfaces import DeviceState, IDeviceConnection
 from .utils.packetversion import PacketVersion
 from .encoders.raw.types import RawData, StatusData
-from .encoders.proto.generated.core import AppVersionResultResponse
-from .encoders.proto.generated.common import Version
+from .encoders.proto.generated.version_pb2 import AppVersionResultResponse
+from .encoders.proto.generated.common_pb2 import Version
 
 
 class IDeprecatedCommunication(Protocol):

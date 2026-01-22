@@ -1,7 +1,7 @@
 from typing import TypeVar, Optional
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
 from util.utils.assert_utils import assert_condition
-from app_manager.proto.generated.error import CommonError
+from app_manager.proto.generated.error_pb2 import CommonError
 
 T = TypeVar("T")
 
@@ -49,9 +49,8 @@ def parse_common_error(error: Optional[CommonError]) -> None:
         ("user_rejection", DeviceAppErrorType.USER_REJECTION),
         ("corrupt_data", DeviceAppErrorType.CORRUPT_DATA),
     ]
-
     for field_name, error_type in error_fields:
-        if hasattr(error, field_name):
+        if getattr(error, field_name) != 0:
             error_value = getattr(error, field_name)
             if error_value is not None:
                 raise DeviceAppError(error_type, error_value)

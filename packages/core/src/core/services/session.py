@@ -28,7 +28,6 @@ async def initiate_server_session(
 
     res = await http.post(f"{BASE_URL}/create", body)
 
-    print({"res": res})
     return res["data"]
 
 

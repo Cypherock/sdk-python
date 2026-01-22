@@ -1,13 +1,14 @@
 from typing import List
-from coincurve import PublicKey
-from ....utils import get_bitcoin_py_lib, get_network_from_path, get_purpose_type
+from ....utils import get_network_from_path, get_purpose_type
+from bitcoinutils.keys import PublicKey as BitcoinPublicKey, P2shAddress
+from bitcoinutils.setup import setup
 
 
 def get_address_from_public_key(uncompressed_public_key: bytes, path: List[int]) -> str:
     """
-    1. Compress the uncompressed public key using secp256k1
-    2. Get the appropriate payment function based on the path
-    3. Generate the address using the payment function
+    1. Get the purpose type from the derivation path
+    2. Create the bitcoin public key object from the uncompressed public key
+    3. Get the address from the public key based on the purpose type
     4. Assert that the address was generated successfully
 
     Args:
@@ -20,28 +21,26 @@ def get_address_from_public_key(uncompressed_public_key: bytes, path: List[int])
     Raises:
         AssertionError: If address could not be derived
     """
-    if len(uncompressed_public_key) == 33:
-        compressed_public_key = uncompressed_public_key
-    elif len(uncompressed_public_key) == 65:
-        compressed_public_key = PublicKey(uncompressed_public_key).format(
-            compressed=True
-        )
-    else:
-        raise ValueError(
-            f"Invalid public key length: {len(uncompressed_public_key)} bytes. Expected 33 (compressed) or 65 (uncompressed)."
-        )
 
-    bitcoin_py_lib = get_bitcoin_py_lib()
     network_config = get_network_from_path(path)
-    network = "bitcoin" if network_config.pub_key_hash == 0 else "testnet"
+    network = "mainnet" if network_config.pub_key_hash == 0 else "testnet"
+    setup(network)
 
     purpose_type = get_purpose_type(path)
+    pubkey = BitcoinPublicKey(uncompressed_public_key.hex())
 
-    if purpose_type == "segwit":
-        result = bitcoin_py_lib.payments.p2wpkh(compressed_public_key, network)
+    if purpose_type == "legacy":
+        address = pubkey.get_address()
+    elif purpose_type == "segwit":
+        address = pubkey.get_segwit_address()
+    elif purpose_type == "nested_segwit":
+        address = P2shAddress.from_script(
+            pubkey.get_segwit_address().to_script_pub_key()
+        )
+    elif purpose_type == "taproot":
+        address = pubkey.get_taproot_address()
     else:
-        result = bitcoin_py_lib.payments.p2pkh(compressed_public_key, network)
+        raise ValueError(f"Unsupported purpose type: {purpose_type}")
 
-    address = result["address"]
     assert address, "Could not derive address"
-    return address
+    return address.to_string()

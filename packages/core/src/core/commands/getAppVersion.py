@@ -1,7 +1,7 @@
 from typing import Optional, Callable, Dict, Any
 from interfaces import IDeviceConnection
-from ..encoders.proto.generated.core import (
-    Msg,
+from ..encoders.proto.generated.core_pb2 import Msg
+from ..encoders.proto.generated.version_pb2 import (
     AppVersionCmd,
     AppVersionRequest,
     AppVersionIntiateRequest,
@@ -40,7 +40,7 @@ async def get_app_versions(params: GetAppVersionsParams):
             request=AppVersionRequest(initiate=AppVersionIntiateRequest())
         )
     )
-    msg_data = uint8array_to_hex(bytes(msg))
+    msg_data = uint8array_to_hex(msg.SerializeToString())
     await send_command(
         connection=params.connection,
         proto_data=msg_data,
@@ -60,12 +60,8 @@ async def get_app_versions(params: GetAppVersionsParams):
         options=params.options,
     )
     try:
-        msg = Msg.parse(result)
-    except TypeError:
-        try:
-            msg = Msg().parse(result)
-        except Exception:
-            raise DeviceAppError(DeviceAppErrorType.INVALID_MSG_FROM_DEVICE)
+        msg = Msg()
+        msg.ParseFromString(result)
     except Exception:
         raise DeviceAppError(DeviceAppErrorType.INVALID_MSG_FROM_DEVICE)
     response = (

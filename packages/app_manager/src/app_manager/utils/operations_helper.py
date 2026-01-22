@@ -1,8 +1,8 @@
 from typing import TypeVar, Generic, Callable, Optional, Any, Dict
 from core.types import ISDK
-from core.encoders.proto.generated.core import Status
+from core.encoders.proto.generated.core_pb2 import Status
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
-from app_manager.proto.generated.manager import Query, Result
+from app_manager.proto.generated.manager.core_pb2 import Query, Result
 from ..utils.assert_utils import assert_or_throw_invalid_result, parse_common_error
 
 Q = TypeVar("Q")
@@ -11,7 +11,7 @@ R = TypeVar("R")
 
 def decode_result(data: bytes) -> Result:
     """
-    Decode result data from bytes.
+    Decode result data from bytes using standard protobuf.
 
     Args:
         data: The bytes to decode
@@ -23,7 +23,9 @@ def decode_result(data: bytes) -> Result:
         DeviceAppError: If decoding fails
     """
     try:
-        return Result().parse(data)
+        result = Result()
+        result.ParseFromString(data)
+        return result
     except Exception as error:
         raise DeviceAppError(DeviceAppErrorType.INVALID_MSG_FROM_DEVICE) from error
 
@@ -36,10 +38,10 @@ def encode_query(query_data: Dict[str, Any]) -> bytes:
         query_data: Dictionary with query field and value
 
     Returns:
-        Encoded query as bytes (equivalent to Query.encode().finish())
+        Encoded query as bytes
     """
     query = Query(**query_data)
-    return bytes(query)
+    return query.SerializeToString()
 
 
 class OperationHelper(Generic[Q, R]):
@@ -89,8 +91,7 @@ class OperationHelper(Generic[Q, R]):
         params = {"on_status": on_status} if on_status else None
         result_data = await self.sdk.wait_for_result(params=params)
         result = decode_result(result_data)
-
-        if hasattr(result, "common_error") and result.common_error:
+        if result.common_error:
             parse_common_error(result.common_error)
 
         result_value = getattr(result, self.result_key, None)

@@ -20,10 +20,10 @@ from .utils.packetversion import PacketVersion, PacketVersionMap
 from .utils.feature_map import FeatureName, is_feature_enabled
 from .types import IFeatureSupport, ISDK
 from .deprecated import DeprecatedCommunication
-from .encoders.proto.types import DeviceIdleState
+from .encoders.proto.generated.core_pb2 import DeviceIdleState
 from .encoders.raw.types import DeviceIdleState as RawDeviceIdleState
 from .utils.logger import logger
-from .encoders.proto.generated.core import AppVersionResultResponse
+from .encoders.proto.generated.version_pb2 import AppVersionResultResponse
 from interfaces.errors.app_error import DeviceAppError, DeviceAppErrorType
 
 
@@ -281,12 +281,10 @@ class SDK:
                 DeviceCompatibilityErrorType.DEVICE_NOT_SUPPORTED,
             ),
         )
-
         if not await self.is_supported():
             raise DeviceCompatibilityError(
                 DeviceCompatibilityErrorType.INVALID_SDK_OPERATION,
             )
-
         if not self.app_versions_map:
             result = await commands.get_app_versions(
                 commands.GetAppVersionsParams(
@@ -338,7 +336,6 @@ class SDK:
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
         app_versions_result = await self.get_app_versions(None, options)
-
         app_version_result = None
         for app in app_versions_result.app_versions:
             if app.id == self.applet_id:

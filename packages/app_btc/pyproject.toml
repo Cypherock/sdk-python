@@ -7,13 +7,13 @@ readme = "README.md"
 packages = [{include = "src/app_btc"}]
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.11,<4"
 # Bitcoin libraries
 bitcoinlib = "^0.7.5"
 python-bitcointx = "^1.1.4"
 coincurve = "^20.0.0"
 base58 = "^2.1.1"
-ecdsa = "^0.18.0"
+ecdsa = "^0.19"
 bech32 = "^1.2.0"
 # HTTP client
 httpx = "^0.24.0"
@@ -21,8 +21,9 @@ httpx = "^0.24.0"
 cryptography = "^41.0.0"
 # Protobuf
 betterproto = "^1.2.5"
-protobuf = "^4.24.0"
+protobuf = "^6.0.0"
 semver = "^3.0.4"
+bitcoin-utils = "^0.7.3"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -42,7 +43,7 @@ line-length = 88
 target-version = ['py311']
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "^3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true

@@ -1,5 +1,4 @@
 from .app import ManagerApp
-from .proto.generated.types import *
 from .operations.types import *
 from .utils import update_logger
 

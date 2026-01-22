@@ -1,7 +1,7 @@
 from core.types import ISDK
 from util.utils import create_logger_with_prefix
 from app_manager.constants.appId import APP_VERSION
-from app_manager.proto.generated.manager import GetWalletsResultResponse
+from app_manager.proto.generated.manager.get_wallets_pb2 import GetWalletsResultResponse
 from ...utils import assert_or_throw_invalid_result, OperationHelper
 from ...utils import logger as rootlogger
 
@@ -13,11 +13,11 @@ async def get_wallets(sdk: ISDK) -> GetWalletsResultResponse:
 
     await sdk.check_app_compatibility(APP_VERSION)
 
-    helper = OperationHelper(sdk, "getWallets", "getWallets")
+    helper = OperationHelper(sdk, "get_wallets", "get_wallets")
 
     await helper.send_query({"initiate": {}})
     result = await helper.wait_for_result()
-    logger.verbose("GetWalletsResponse", result)
+    logger.verbose("GetWalletsResponse", {"result": result})
     assert_or_throw_invalid_result(result.result)
 
     logger.info("Completed")

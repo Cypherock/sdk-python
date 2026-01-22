@@ -1,19 +1,21 @@
 #!/bin/bash
-# Python SDK proto compiler using betterproto (equivalent to TypeScript version)
+# Python SDK proto compiler using standard protoc
 
 set -e
 
 # Ensure we're in the correct directory
 cd "$(dirname "$0")/.."
 
-# Create output directory
+rm -rf ./src/core/encoders/proto/generated/*.py || true
+
+# Create output directory for generated files
 mkdir -p src/core/encoders/proto/generated
 
-# Use poetry run python3 to ensure we use the root environment with betterproto
+# Use poetry run python3 to ensure we use the root environment with standard protoc
 PYTHON_CMD="poetry run python3"
 
-# Step 1: Compile .proto files using betterproto (equivalent to protoc + ts-proto)
-protoc --python_betterproto_out=./src/core/encoders/proto/generated \
+# Compile .proto files using standard protoc
+protoc --python_out=./src/core/encoders/proto/generated \
     --proto_path="../../submodules/common/proto" \
     ../../submodules/common/proto/common.proto \
     ../../submodules/common/proto/core.proto \
@@ -21,5 +23,5 @@ protoc --python_betterproto_out=./src/core/encoders/proto/generated \
     ../../submodules/common/proto/session.proto \
     ../../submodules/common/proto/version.proto
 
-# Step 2: Extract and consolidate types (equivalent to extractTypes/index.js)
-$PYTHON_CMD ../../scripts/extract_types/__init__.py ./src/core/encoders/proto/generated ./src/core/encoders/proto/generated/types.py
+# Fix imports in generated files
+$PYTHON_CMD ../../scripts/fix_proto_imports.py ./src/core/encoders/proto/generated core

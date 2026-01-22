@@ -2,7 +2,7 @@ from typing import Optional
 from core.types import ISDK
 from util.utils import create_logger_with_prefix, create_status_listener
 from ...constants.appId import APP_VERSION
-from ...proto.generated.manager import GetLogsStatus, GetLogsErrorResponse
+from ...proto.generated.manager.get_logs_pb2 import GetLogsStatus, GetLogsErrorResponse
 from ...utils import assert_or_throw_invalid_result, OperationHelper
 from ...utils import logger as rootlogger
 from .types import GetLogsError, GetLogsErrorType, GetLogsEventHandler
@@ -39,17 +39,19 @@ async def get_logs(
     on_event: Optional[GetLogsEventHandler] = None,
 ) -> str:
     logger.info("Started")
-    helper = OperationHelper(sdk, "getLogs", "getLogs")
+    helper = OperationHelper(sdk, "get_logs", "get_logs")
 
     await sdk.check_app_compatibility(APP_VERSION)
 
-    on_status, force_status_update = create_status_listener(
+    status_listener = create_status_listener(
         {
             "enums": GetLogsStatus,
             "onEvent": on_event,
             "logger": logger,
         }
     )
+    on_status = status_listener["onStatus"]
+    force_status_update = status_listener["forceStatusUpdate"]
 
     # ASCII decoder for log data
     def decode_ascii(data: bytes) -> str:
@@ -68,12 +70,12 @@ async def get_logs(
             force_status_update(GetLogsStatus.GET_LOGS_STATUS_USER_CONFIRMED)
 
         is_confirmed = True
-        has_more = result.hasMore
+        has_more = result.has_more
 
         all_logs.append(decode_ascii(result.data))
 
         if has_more:
-            await helper.send_query({"fetchNext": {}})
+            await helper.send_query({"fetch_next": {}})
         else:
             break
 

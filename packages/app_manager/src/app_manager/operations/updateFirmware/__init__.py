@@ -7,7 +7,7 @@ from util.utils import (
     uint8array_to_hex,
 )
 from app_manager.constants.appId import APP_VERSION
-from app_manager.proto.generated.manager import (
+from app_manager.proto.generated.manager.firmware_update_pb2 import (
     FirmwareUpdateErrorResponse,
     FirmwareUpdateError,
 )

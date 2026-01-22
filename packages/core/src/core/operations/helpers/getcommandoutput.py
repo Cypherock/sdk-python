@@ -44,7 +44,7 @@ async def get_command_output(
             raw_data=int_to_uint_byte(current_packet, 16),
             version=version,
             sequence_number=sequence_number,
-            packet_type=usable_config.commands.PACKET_TYPE.CMD_OUTPUT,
+            packet_type=usable_config.commands.PACKET_TYPE.CMD_OUTPUT_REQ,
         )
 
         if len(packets_list) > 1:

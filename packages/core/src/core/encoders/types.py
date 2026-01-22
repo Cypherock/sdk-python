@@ -1,5 +1,5 @@
 # Export all types from proto/types
-from .proto.types import (
+from .proto.generated.core_pb2 import (
     Status,
     DeviceIdleState,
     DeviceWaitingOn,
