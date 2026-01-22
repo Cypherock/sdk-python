@@ -37,10 +37,6 @@ async def send_command(
         sequence_number=sequence_number,
         packet_type=usable_config.commands.PACKET_TYPE.CMD,
     )
-    print("encode_packet completed")
-    print(packets_list)
-    print(proto_data)
-    print(raw_data)
 
     first_error: Optional[Exception] = None
 

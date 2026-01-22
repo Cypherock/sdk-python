@@ -20,7 +20,6 @@ async def get_result(
 ) -> Dict[str, Union[bool, Union[Status, bytes]]]:
     assert_condition(applet_id, 'Invalid appletId')
 
-    print("get_result started")
     command_output = await get_command_output(
         connection=connection,
         version=version,
@@ -28,31 +27,22 @@ async def get_result(
         sequence_number=sequence_number,
         timeout=timeout
     )
-    print("get_command_output completed")
 
     is_status = command_output["is_status"]
     protobuf_data = command_output["protobuf_data"]
     raw_data = command_output["raw_data"]
-    print("is_status", is_status)
-    print("protobuf_data", protobuf_data)
-    print("raw_data", raw_data)
 
     output: Union[bytes, Status]
 
     if is_status:
-        print("parsing status")
         status = Status()
         status.ParseFromString(hex_to_uint8array(protobuf_data))
-        print("status", status)
         if status.current_cmd_seq != sequence_number:
             raise DeviceAppError(DeviceAppErrorType.EXECUTING_OTHER_COMMAND)
         output = status
     else:
-        # Parse Msg using standard protobuf
-        print("parsing msg")
         msg = Msg()
         msg.ParseFromString(hex_to_uint8array(protobuf_data))
-        print("msg", msg)
 
         # Determine which oneof is set and route accordingly
         active_field = None

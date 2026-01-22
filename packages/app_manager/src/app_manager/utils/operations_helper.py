@@ -70,9 +70,7 @@ class OperationHelper(Generic[Q, R]):
             query: The query object to send
         """
         query_data = {self.query_key: query}
-        print("query_data", query_data)
         encoded_query = encode_query(query_data)
-        print("encoded_query", encoded_query)
         return await self.sdk.send_query(encoded_query)
 
     async def wait_for_result(
@@ -92,18 +90,12 @@ class OperationHelper(Generic[Q, R]):
         """
         params = {"on_status": on_status} if on_status else None
         result_data = await self.sdk.wait_for_result(params=params)
-        print("**********result_data", result_data)
         result = decode_result(result_data)
-        print("**********result", result)
         if result.common_error:
-            print("**********parse_common_error", result.common_error)
             parse_common_error(result.common_error)
 
-        print("**********getattr")
         result_value = getattr(result, self.result_key, None)
-        print("**********result_value", result_value)
         assert_or_throw_invalid_result(result_value)
-        print("**********assert_or_throw_invalid_result completed")
 
         if hasattr(result_value, "common_error") and result_value.common_error:
             parse_common_error(result_value.common_error)
