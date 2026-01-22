@@ -20,7 +20,7 @@ from .utils.packetversion import PacketVersion, PacketVersionMap
 from .utils.feature_map import FeatureName, is_feature_enabled
 from .types import IFeatureSupport, ISDK
 from .deprecated import DeprecatedCommunication
-from .encoders.proto.types import DeviceIdleState
+from .encoders.proto.generated.core_pb2 import DeviceIdleState
 from .encoders.raw.types import DeviceIdleState as RawDeviceIdleState
 from .utils.logger import logger
 from .encoders.proto.generated.version_pb2 import AppVersionResultResponse

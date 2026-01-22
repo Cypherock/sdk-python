@@ -1,5 +1,5 @@
 from enum import Enum
-from core.encoders.proto.generated.types import CardError
+from core.encoders.proto.generated.error_pb2 import CardError
 from .sub_error import SubErrorToMap, SubErrorDetail
 
 

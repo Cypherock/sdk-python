@@ -2,7 +2,7 @@ from typing import Optional
 from core.types import ISDK
 from util.utils import create_logger_with_prefix, create_status_listener
 from app_manager.constants.appId import APP_VERSION
-from app_manager.proto.generated.types import TrainJoystickStatus
+from app_manager.proto.generated.manager.train_joystick_pb2 import TrainJoystickStatus
 from ...utils import assert_or_throw_invalid_result, OperationHelper
 from ...utils import logger as rootlogger
 from .types import TrainJoystickEventHandler
